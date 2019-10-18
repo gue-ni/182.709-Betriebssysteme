@@ -1,6 +1,8 @@
 /*
 	@author: Jakob G. Maier 11809618
 	@date: 18.10.19
+	@details:
+	@brief:
 
 
 
