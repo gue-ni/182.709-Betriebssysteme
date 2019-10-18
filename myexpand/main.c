@@ -24,7 +24,6 @@ int main(int argc, char *argv[])
 	char *inputfile = NULL;
 	int tabstop = 8;
 
-
 	while( (c = getopt(argc, argv, "t:o:")) != -1 ){
 		switch( c ){
 			case 't':
@@ -70,7 +69,8 @@ int main(int argc, char *argv[])
 
 	if (in_f) {
 		// feof, fileno both work
-		if (isatty(feof(in_f)) && !inputfile){ // fixed den hänger 
+		if (isatty(feof(in_f)) && !inputfile)
+		{ 
 			return EXIT_FAILURE;
 		}
 
