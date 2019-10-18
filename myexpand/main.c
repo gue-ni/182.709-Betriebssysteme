@@ -3,9 +3,6 @@
 	@date: 18.10.19
 	@details:
 	@brief:
-
-
-
 */
 #include <stdio.h>
 #include <stdlib.h>
