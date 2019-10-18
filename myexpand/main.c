@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
 	char *inputfile = NULL;
 	int tabstop = 8;
 
-	while( (c = getopt(argc, argv, "t:o:")) != -1 ){
+	while( (c = getopt(argc, argv, "t:o:h")) != -1 ){
 		switch( c ){
 			case 't':
 				tabstop = (int) strtol(optarg, NULL, 0);
