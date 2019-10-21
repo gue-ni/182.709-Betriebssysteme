@@ -20,7 +20,6 @@ myexpand: $(OBJECTS)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 main.o: main.c
-#utils.o: utils.c utils.h
 
 clean:
 	rm -rf *.o myexpand

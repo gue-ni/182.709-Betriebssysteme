@@ -51,24 +51,23 @@ int main(int argc, char *argv[])
 	FILE *out_f;
 	FILE *in_f;
 
-	if (!outfile){
-		out_f = stdout;
-	} else {
+	if (outfile){
 		out_f = fopen(outfile, "w");
+	} else {
+		out_f = stdout;
 	}
 
-	if (!inputfile){
-		in_f = stdin;
-	} else {
+	if (inputfile){
 		in_f = fopen(inputfile, "r");
+	} else {
+		in_f = stdin;
 	}
 
 	int next_c;
 
 	if (in_f) {
 		// feof, fileno both work
-		if (isatty(feof(in_f)) && !inputfile)
-		{ 
+		if (isatty(feof(in_f)) && !inputfile){  // esit if no inputfile and empty stdin
 			return EXIT_FAILURE;
 		}
 
