@@ -21,6 +21,7 @@ int main(int argc, char *argv[])
 	char *inputfile = NULL;
 	int tabstop = 8;
 
+	// reads in command line arguments
 	while( (c = getopt(argc, argv, "t:o:h")) != -1 ){
 		switch( c ){
 			case 't':
@@ -43,9 +44,9 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (optind > argc-2){
-		inputfile = argv[optind];
-	}
+	//if (optind > argc-2){
+	//	inputfile = argv[optind];
+	//}
 
 	FILE *out_f;
 	FILE *in_f;
