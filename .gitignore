@@ -1,5 +1,7 @@
 *.o
 myexpand
 *.txt
-
+*.pdf
+!myexpand_td.pdf
+test.c
 

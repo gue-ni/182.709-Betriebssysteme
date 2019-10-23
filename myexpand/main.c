@@ -48,46 +48,46 @@ int main(int argc, char *argv[])
 	//	inputfile = argv[optind];
 	//}
 
-	FILE *out_f;
-	FILE *in_f;
+	FILE *out_fp;
+	FILE *in_fp;
 
 	if (outfile){
-		out_f = fopen(outfile, "w");
+		out_fp = fopen(outfile, "w");
 	} else {
-		out_f = stdout;
+		out_fp = stdout;
 	}
 
 	if (inputfile){
-		in_f = fopen(inputfile, "r");
+		in_fp = fopen(inputfile, "r");
 	} else {
-		in_f = stdin;
+		in_fp = stdin;
 	}
 
 	int next_c;
 
-	if (in_f) {
+	if (in_fp) {
 		// feof, fileno both work
-		if (isatty(feof(in_f)) && !inputfile){  // esit if no inputfile and empty stdin
+		if (isatty(feof(in_fp)) && !inputfile){  // esit if no inputfile and empty stdin
 			return EXIT_FAILURE;
 		}
 
-		while ((c = getc(in_f)) != EOF){ // programm hängt hier
+		while ((c = getc(in_fp)) != EOF){ // programm hängt hier
 			if (c == '\\'){
-				if ((next_c = getc(in_f)) == 't'){
+				if ((next_c = getc(in_fp)) == 't'){
 					for (int i = 0; i < tabstop; ++i)
 					{
-						fputc(' ', out_f);
+						fputc(' ', out_fp);
 					}
 				} else {
-					fputc(c, out_f);
-					ungetc(next_c, in_f);
+					fputc(c, out_fp);
+					ungetc(next_c, in_fp);
 				}
 			} else {
-				fputc(c, out_f);
+				fputc(c, out_fp);
 			}
 		}
-		fclose(in_f);
-		fclose(out_f);
+		fclose(in_fp);
+		fclose(out_fp);
 	}
 	return EXIT_SUCCESS;
 }
