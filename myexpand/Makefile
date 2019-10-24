@@ -14,7 +14,8 @@ OBJECTS = main.o
 all: myexpand 
 
 myexpand: $(OBJECTS) 
-	$(CC) $(LDFLAGS) -o $@ $^ 
+	$(CC) $(LDFLAGS) -o $@ $^
+	rm -f *.o 
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
@@ -22,6 +23,6 @@ myexpand: $(OBJECTS)
 main.o: main.c
 
 clean:
-	rm -rf *.o myexpand
+	rm -f *.o myexpand
 
 

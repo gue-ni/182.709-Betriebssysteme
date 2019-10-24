@@ -44,9 +44,9 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	//if (optind > argc-2){
-	//	inputfile = argv[optind];
-	//}
+	if (optind > argc-2){
+		inputfile = argv[optind];
+	}
 
 	FILE *out_fp;
 	FILE *in_fp;
@@ -66,21 +66,20 @@ int main(int argc, char *argv[])
 	int next_c;
 
 	if (in_fp) {
-		// feof, fileno both work
-		if (isatty(feof(in_fp)) && !inputfile){  // esit if no inputfile and empty stdin
-			return EXIT_FAILURE;
-		}
 
-		while ((c = getc(in_fp)) != EOF){ // programm hängt hier
-			if (c == '\\'){
-				if ((next_c = getc(in_fp)) == 't'){
+		while ( (c = fgetc(in_fp) ) != EOF ){
+
+			if ( c == '\\' ){
+				if ( (next_c = fgetc(in_fp) ) == 't'){ // check for \t
+
 					for (int i = 0; i < tabstop; ++i)
 					{
 						fputc(' ', out_fp);
 					}
-				} else {
+					
+				} else { // just a random backslash
 					fputc(c, out_fp);
-					ungetc(next_c, in_fp);
+					fputc(next_c, out_fp);
 				}
 			} else {
 				fputc(c, out_fp);
