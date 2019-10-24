@@ -10,25 +10,30 @@
 
 void usage(char *myprog)
 {
-	fprintf(stderr, "Usage: %s [-p PORT] [-i INDEX] DOC_ROOT\n", myprog);
+	fprintf(stderr, "Usage: %s [-p PORT] [-o FILE | -d DIR ] URL\n", myprog);
 	exit(EXIT_FAILURE);
 }
 
 int main(int argc, char *argv[])
 {
 	int c;
-	char *index = "index.html";
-	int port = 8080;
+	char *outfile = "NULL";
+	char *directory = "NULL";
+	int port = 80;
 
 	// reads in command line arguments
-	while( (c = getopt(argc, argv, "p:i:")) != -1 ){
+	while( (c = getopt(argc, argv, "p:o:d:h")) != -1 ){
 		switch( c ){
 			case 'p':
 				port = (int) strtol(optarg, NULL, 0);
 				break;
 
-			case 'i':
-				index = optarg;
+			case 'o':
+				outfile = optarg;
+				break;
+
+			case 'd':
+				directory = optarg;
 				break;
 
 			case 'h':
@@ -43,7 +48,8 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	printf("%s\n", index);
+	printf("%s\n", outfile);
+	printf("%s\n", directory);
 	printf("%d\n", port);
 
 
