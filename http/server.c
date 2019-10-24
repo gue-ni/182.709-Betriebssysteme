@@ -1,7 +1,6 @@
 /*
-	@author: Jakob G. Maier 11809618
-	@date: 18.10.19
-	@details:
+	@author: Jakob G. Maier <e11809618@student.tuwien.ac.at>
+	@date: 2019-19-24
 	@brief:
 */
 #include <stdio.h>
