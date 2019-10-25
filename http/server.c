@@ -3,6 +3,7 @@
 	@date: 2019-19-24
 	@brief:
 */
+#include "utils.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -14,11 +15,11 @@
 #include <fcntl.h>
 #include <errno.h>
 
-void usage(char *myprog)
+/*void prog_usage(char *myprog)
 {
-	fprintf(stderr, "Usage: %s [-p PORT] [-i INDEX] DOC_ROOT\n", myprog);
+	fprintf(stderr, "prog_usage: %s [-p PORT] [-i INDEX] DOC_ROOT\n", myprog);
 	exit(EXIT_FAILURE);
-}
+}*/
 
 int main(int argc, char *argv[])
 {
@@ -38,20 +39,18 @@ int main(int argc, char *argv[])
 				break;
 
 			case 'h':
-				usage(argv[0]);
+				prog_usage(argv[0]);
 				exit(EXIT_FAILURE);
 				break;
 
 			default:
-				usage(argv[0]);
+				prog_usage(argv[0]);
 				exit(EXIT_FAILURE);
 				break;
 		}
 	}
 
 	printf("%s\n", index);
-	printf("%s\n", port);
-
 
 	struct addrinfo hints, *ai;
 	memset(&hints, 0, sizeof hints);
@@ -74,6 +73,9 @@ int main(int argc, char *argv[])
 		// error
 	}
 
+	int optval = 1;
+	setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof optval);
+
 	if(bind(sockfd, ai->ai_addr, ai->ai_addrlen) < 0) 
 	{
 		// error
@@ -85,16 +87,32 @@ int main(int argc, char *argv[])
 		// error
 	}
 
-	int new_socket; 
+	int new_socket_fd; 
 
-	if ((new_socket = accept(sockfd, ai->ai_addr, &ai->ai_addrlen)) < 0){
+	if ((new_socket_fd = accept(sockfd, ai->ai_addr, &ai->ai_addrlen)) < 0){
 		// error
 	}
 
-	char buf[1024];
+	FILE *new_socket = fdopen(new_socket_fd, "r+");
 
-    while (read(new_socket, buf, sizeof(buf)) > 0){
+	char buf[1024];
+	//printf("%ld\n", sizeof(buf));
+	//return 1;
+	//char *buf = (char*) malloc(1024 * sizeof(char));
+
+	char response[80] = "RESPONSE: \n";
+
+    while (read(new_socket_fd, buf, sizeof(buf)) > 0){
 		fputs(buf, stdout);
+		// TODO:
+		//parse_request(header, buf);
+		//send_header(header);
+		//send_body(file_buffer);
+
+		fputs(response, new_socket);
+		fflush(new_socket);
+		memset(buf, 0, sizeof(buf));
+		break;
 
 
     }
