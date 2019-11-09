@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
 	char buf[1024];
 	//printf("%ld\n", sizeof(buf));
 	//return 1;
-	//char *buf = (char*) malloc(1024 * sizeof(char));
+	//char *buf = (char*) malloc(1024 * sizeof(char*));
 
 	char response[80] = "RESPONSE: \n";
 

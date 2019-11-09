@@ -14,8 +14,15 @@
 
 void GET(FILE *socket, request *rq)
 {
-	fprintf(socket, "GET %s HTTP/1.1\r\nHost: %s\r\n\r\n", rq->resource, rq->host);
+	fprintf(socket, "GET %s HTTP/1.1\r\n"
+					"Host: %s\r\n"
+					"Connection: close\r\n\r\n", rq->resource, rq->host);
 	fflush(socket);
+}
+
+void parse_hostname()
+{
+	
 }
 
 void RESPONSE_HEADER(FILE *socket, response_header *rsp){

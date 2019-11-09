@@ -17,8 +17,6 @@
 
 
 
-
-
 FILE *get_out(char *file, char *dir)
 {
 	if (file)
@@ -39,8 +37,41 @@ FILE *get_out(char *file, char *dir)
 
 void parse_url(request *get_request, char *url)
 {
-	get_request->resource = "/";
-	get_request->host = url;
+	char* resource;
+	char* hostname;
+	
+	if (memcmp(url, "http://", 7) != 0)
+	{
+		printf("Does not start with http://\n");
+		exit(EXIT_FAILURE);
+	}
+
+	url += 7;
+
+	int c;
+	for (int i = 0; i < strlen(url); ++i)
+	{
+		c = url[i];
+
+		if ( c == '/' || 
+			 c == '&' || 
+			 c == ';' || 
+			 c == '?' ||
+			 c == ':' ||
+			 c == '@' ||
+			 c == '&' ){
+
+			hostname = malloc(i * sizeof(char));
+			strncpy(hostname, url, i);
+
+			resource = malloc(strlen(url) - i * sizeof(char));
+			strcpy(resource, url += i);
+		}
+
+	}	
+
+	get_request->resource = resource;
+	get_request->host = hostname;
 }
 
 int main(int argc, char *argv[])
@@ -78,15 +109,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-//	printf("argc: %d, optind: %d\n", argc, optind);
-	printf("%s%s\n", outfile, directory);
-	// GET positional argument from cli	
-	printf("optind: %d\n", optind);
 	url = argv[optind];
-	
-	//TODO remove
-	//printf("url: %s\nport: %s\n=====================\n", url, port);
-
 
 	struct addrinfo hints, *ai;
 	memset(&hints, 0, sizeof hints);
@@ -96,17 +119,17 @@ int main(int argc, char *argv[])
 
 	getaddrinfo(url, port, &hints, &ai);
 
-
 	int sockfd = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
 	if (sockfd < 0)
 	{
-		// error
+		printf("Failed to open socket\n");
+		exit(EXIT_FAILURE);
 	}
 
-	
 	if ((connect(sockfd, ai->ai_addr, ai->ai_addrlen)) < 0)
 	{
-		// error
+		printf("Failed to connect\n");
+		exit(EXIT_FAILURE);
 	}
 
 	FILE *sockfp = fdopen(sockfd, "r+");
@@ -119,34 +142,28 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-
-	fputs("Hello\n", out);	
-	fputs("World!\n", out);
-
-
-
-
 	request *rq = malloc(sizeof(request));
 
 	parse_url(rq, url);
 
+	printf("\n");
 	GET(stdout, rq);
 	GET(sockfp, rq);
 
 	char buf[1024];
 
+	/*
     while (fgets(buf, sizeof(buf), sockfp) != NULL){
-//		printf("\n================================\nRead %ld bytes\n================================\n", sizeof(buf));
 		fputs(buf, stdout);
 		memset(buf, 0, sizeof(buf));
 
 
-    }
+    } 
+    */
 
-
-
+	printf("test\n");
     fclose(sockfp);
-    fclose(out);
+    //fclose(out);
 
 	return EXIT_SUCCESS;
 }
