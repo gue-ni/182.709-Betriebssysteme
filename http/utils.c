@@ -16,7 +16,7 @@ void GET(FILE *socket, request *rq)
 {
 	fprintf(socket, "GET %s HTTP/1.1\r\n"
 					"Host: %s\r\n"
-					"Connection: close\r\n\r\n", rq->resource, rq->host);
+					"Connection: close\r\n\r\n", rq->resource, rq->hostname);
 	fflush(socket);
 }
 
@@ -30,8 +30,8 @@ void RESPONSE_HEADER(FILE *socket, response_header *rsp){
 		"HTTP/1.1 %d %s\r\n" 
 		"Date: %s\r\n"
 		"Content-Length: %d\r\n"
-		"Connection: %s\r\n", 
-		rsp->http_err_code, rsp->http_err, rsp->date, rsp->con_len, rsp->con_stat);
+		"Connection: close\r\n", 
+		rsp->http_err_code, rsp->http_err, rsp->date, rsp->con_len);
 	fflush(socket);
 
 }

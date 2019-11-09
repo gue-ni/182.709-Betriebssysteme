@@ -3,6 +3,19 @@
 	@date: 2019-19-24
 	@brief:
 */
+
+
+
+/*
+
+achtung: command injection mit &
+
+
+
+
+
+
+*/ 
 #include "utils.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,8 +27,6 @@
 #include <netdb.h>
 #include <fcntl.h>
 #include <errno.h>
-
-
 
 FILE *get_out(char *file, char *dir)
 {
@@ -33,20 +44,22 @@ FILE *get_out(char *file, char *dir)
 	}
 }
 
+int check_protocoll(char *url){
+	return memcmp(url, "http://", 7);
+}
 
-
-void parse_url(request *get_request, char *url)
+void parse_url(request *get, char *url)
 {
-	char* resource;
+	char* resource = "/";
 	char* hostname;
 	
-	if (memcmp(url, "http://", 7) != 0)
+	if (check_protocoll(url))
 	{
 		printf("Does not start with http://\n");
 		exit(EXIT_FAILURE);
 	}
 
-	url += 7;
+	url += 7; // remove http://
 
 	int c;
 	for (int i = 0; i < strlen(url); ++i)
@@ -66,12 +79,18 @@ void parse_url(request *get_request, char *url)
 
 			resource = malloc(strlen(url) - i * sizeof(char));
 			strcpy(resource, url += i);
+			break;
 		}
-
 	}	
 
-	get_request->resource = resource;
-	get_request->host = hostname;
+	if (hostname == NULL)
+		hostname = url;
+
+	//printf("hostname: %s\n", hostname);
+	//printf("resource: %s\n", resource);
+
+	get->resource = resource;
+	get->hostname = hostname;
 }
 
 int main(int argc, char *argv[])
@@ -111,13 +130,17 @@ int main(int argc, char *argv[])
 
 	url = argv[optind];
 
+	request *rq = malloc(sizeof(request));
+
+	parse_url(rq, url);
+
 	struct addrinfo hints, *ai;
 	memset(&hints, 0, sizeof hints);
 
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
 
-	getaddrinfo(url, port, &hints, &ai);
+	getaddrinfo(rq->hostname, port, &hints, &ai);
 
 	int sockfd = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
 	if (sockfd < 0)
@@ -142,28 +165,21 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	request *rq = malloc(sizeof(request));
-
-	parse_url(rq, url);
-
-	printf("\n");
-	GET(stdout, rq);
+	GET(stdout, rq); // for debugging only
 	GET(sockfp, rq);
 
 	char buf[1024];
-
-	/*
+	
     while (fgets(buf, sizeof(buf), sockfp) != NULL){
 		fputs(buf, stdout);
+		fputs(buf, out);
 		memset(buf, 0, sizeof(buf));
-
-
     } 
-    */
+    
 
 	printf("test\n");
     fclose(sockfp);
-    //fclose(out);
+    fclose(out);
 
 	return EXIT_SUCCESS;
 }

@@ -4,7 +4,7 @@
 
 // HTTP request-header
 typedef struct {
-	char *host;
+	char *hostname;
 	char *resource;
 } request;
 
