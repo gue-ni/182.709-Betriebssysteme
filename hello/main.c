@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	printf("%d\n", argv[argc]);
+	printf("%s\n", argv[argc]);
 
 	if ( a_arg != NULL )
 	{
