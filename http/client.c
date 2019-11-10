@@ -68,9 +68,15 @@ void parse_url(request *get, char *url)
 
 			// maybe call free?
 			hostname = malloc(i * sizeof(char));
+			if (hostname == NULL)
+				exit(EXIT_FAILURE);
+
 			strncpy(hostname, url, i);
 
 			resource = malloc(strlen(url) - i * sizeof(char));
+			if (resource == NULL)
+				exit(EXIT_FAILURE);
+
 			strcpy(resource, url += i);
 			break;
 		}
@@ -79,14 +85,13 @@ void parse_url(request *get, char *url)
 	if (hostname == NULL)
 		hostname = url;
 
-	//printf("hostname: %s\n", hostname);
-	//printf("resource: %s\n", resource);
-
-	//free(hostname);
-	//free(resource);
-
 	get->resource = resource;
 	get->hostname = hostname;
+
+	free(hostname);
+	free(resource);
+
+
 }
 
 
@@ -114,21 +119,41 @@ FILE* parse_dir(char *dir, char *r){
 
 	if (strcmp(r, "/") == 0){
 		resource = malloc(sizeof(char) * 11);
+
+		if (resource == NULL)
+			exit(EXIT_FAILURE);
+
 		strcpy(resource, "/index.html");
 	} else {
 		resource = malloc(sizeof(char) * strlen(r));
+
+		if (resource == NULL)
+			exit(EXIT_FAILURE);
+
 		strcpy(resource, r);
 	}
 
 	directory = malloc(sizeof(char) * strlen(dir));
 
+	if (directory == NULL)
+		exit(EXIT_FAILURE);
+
 	if ((char) dir[strlen(dir) - 1] == '/'){
 		directory = malloc(sizeof(char) * strlen(dir) - 1);
+
+		if (directory == NULL)
+			exit(EXIT_FAILURE);
+
 		strncpy(directory, dir, strlen(dir) - 1);
 	} else {
 		strcpy(directory, dir);
 	}
+
 	char *path = malloc(sizeof(char) * (strlen(resource) + strlen(directory)));
+	if (path == NULL)
+		exit(EXIT_FAILURE);
+
+
 	strcat(path, directory);
 	strcat(path, resource);
 
@@ -179,12 +204,14 @@ int main(int argc, char *argv[])
 	url = argv[optind];
 
 	request *rq = malloc(sizeof(request));
+	if (rq == NULL)
+		exit(EXIT_FAILURE);
+
 
 	parse_url(rq, url);
 
 	struct addrinfo hints, *ai;
 	memset(&hints, 0, sizeof hints);
-
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
 
@@ -198,6 +225,7 @@ int main(int argc, char *argv[])
 		case (1):
 			fp = fdopen(out_opt, "w"); // stdout
 			break;
+
 		case (2):
 			fp = fopen(outfile, "w");
 			break;
@@ -221,11 +249,11 @@ int main(int argc, char *argv[])
 	free(rq);
 
 	char buf[1024];
-	int first_line = 1, header = 1;
+	int fl = 1, header = 1;
 	int status_code;
 
     while (fgets(buf, sizeof(buf), sockfp) != NULL){
-    	if (first_line){
+    	if (fl){
 
     		if ( (status_code = check_response(buf) ) == 0) 
     		{
@@ -233,11 +261,11 @@ int main(int argc, char *argv[])
     			exit(2);
 
     		} else if (status_code != 200){
-	    		fputs(buf+9, fp);
+	    		fprintf(stderr, "%s\n", buf+9);
 	    		exit(3);
 
     		} else {
-    			first_line = 0;
+    			fl = 0;
     			continue;
     		}
     	}
@@ -252,7 +280,6 @@ int main(int argc, char *argv[])
     			continue;
     		}
     	}
-
 
 		fputs(buf, fp);
 		memset(buf, 0, sizeof(buf));
