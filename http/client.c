@@ -88,8 +88,8 @@ void parse_url(request *get, char *url)
 	get->resource = resource;
 	get->hostname = hostname;
 
-	free(hostname);
-	free(resource);
+	//free(hostname); this does not work. why???
+	//free(resource);
 
 
 }
@@ -207,8 +207,11 @@ int main(int argc, char *argv[])
 	if (rq == NULL)
 		exit(EXIT_FAILURE);
 
-
 	parse_url(rq, url);
+	
+	// TODO remove
+//	printf("%s\n", rq->hostname);
+//	printf("%s\n", rq->resource);
 
 	struct addrinfo hints, *ai;
 	memset(&hints, 0, sizeof hints);
@@ -244,7 +247,9 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-//	GET(stdout, rq); // for debugging only
+	printf("##########################\n");
+	GET(stdout, rq); // for debugging only
+	printf("##########################\n");
 	GET(sockfp, rq);
 	free(rq);
 
@@ -255,13 +260,15 @@ int main(int argc, char *argv[])
     while (fgets(buf, sizeof(buf), sockfp) != NULL){
     	if (fl){
 
-    		if ( (status_code = check_response(buf) ) == 0) 
+    		status_code = check_response(buf);
+
+    		if ( status_code == 0) 
     		{
     			fprintf(stderr, "Protocol error!\n");
     			exit(2);
 
     		} else if (status_code != 200){
-	    		fprintf(stderr, "%s\n", buf+9);
+	    		fprintf(stderr, "%s", buf+9);
 	    		exit(3);
 
     		} else {
@@ -282,6 +289,7 @@ int main(int argc, char *argv[])
     	}
 
 		fputs(buf, fp);
+//		fwrite(buf, 1024, 1, fp);
 		memset(buf, 0, sizeof(buf));
     } 
     
