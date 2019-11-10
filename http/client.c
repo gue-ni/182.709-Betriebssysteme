@@ -110,27 +110,30 @@ FILE* create_socket(struct addrinfo *ai)
 
 FILE* parse_dir(char *dir, char *r){
 	char *resource;
+	char *directory;
+
 	if (strcmp(r, "/") == 0){
-		resource = "/index.html"; // not sure if memory save
+		resource = malloc(sizeof(char) * 11);
+		strcpy(resource, "/index.html");
 	} else {
-
 		resource = malloc(sizeof(char) * strlen(r));
-
-		printf("last char of dir%c\n", r[strlen(r) - 1]);
-		if (r[strlen(r) - 1] == "/"){
-			strncpy(resource, r, strlen(r) - 1); 
-		} else {
-			strcpy(resource, r);
-		}
-
-
+		strcpy(resource, r);
 	}
 
-	char *path = malloc(sizeof(char) * (strlen(resource) + strlen(dir)));
-	strcat(path, dir);
-	strcat(path, resource);
-	printf("PATH: %s\n", path);
+	directory = malloc(sizeof(char) * strlen(dir));
 
+	if ((char) dir[strlen(dir) - 1] == '/'){
+		directory = malloc(sizeof(char) * strlen(dir) - 1);
+		strncpy(directory, dir, strlen(dir) - 1);
+	} else {
+		strcpy(directory, dir);
+	}
+	char *path = malloc(sizeof(char) * (strlen(resource) + strlen(directory)));
+	strcat(path, directory);
+	strcat(path, resource);
+
+	free(resource);
+	free(directory);
 	return fopen(path, "w");
 
 }
@@ -207,18 +210,13 @@ int main(int argc, char *argv[])
 			assert(0);
 
 	}
-	
-
-
-
-	//FILE *fp = get_out(outfile, directory);
 
 	if(fp == NULL) {
 		fprintf(stderr, "fopen failed: %s\n", strerror(errno));
 		exit(EXIT_FAILURE);
 	}
 
-	GET(stdout, rq); // for debugging only
+//	GET(stdout, rq); // for debugging only
 	GET(sockfp, rq);
 	free(rq);
 
