@@ -4,18 +4,6 @@
 	@brief:
 */
 
-
-
-/*
-
-achtung: command injection mit &
-
-
-
-
-
-
-*/ 
 #include "utils.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,25 +15,32 @@ achtung: command injection mit &
 #include <netdb.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <assert.h>
 
-FILE *get_out(char *file, char *dir)
-{
-	if (file)
-	{
-		return fopen(file, "w");
 
-	} else if (dir) {
-
-		return fopen(dir, "w");
-
-	} else {
-
-		return fdopen(STDOUT_FILENO, "w");
-	}
+int check_protocol(char *url){
+	return memcmp(url, "http://", 7);
 }
 
-int check_protocoll(char *url){
-	return memcmp(url, "http://", 7);
+// returns 0 if it does not start with HTTP/1.1, else HTTP code
+int check_response(char *buf){
+	
+	if (memcmp(buf, "HTTP/1.", 7) != 0) // TODO change this to 1.1
+	{
+		printf("Protocol error!\n");
+		return 0;
+	} else {
+		buf += 8;
+	}
+
+	int status_code = strtol(buf, NULL, 10);
+	
+	if (status_code < 600 && status_code >= 100)
+	{
+		return status_code;
+	} else {
+		return 0;
+	}
 }
 
 void parse_url(request *get, char *url)
@@ -53,7 +48,7 @@ void parse_url(request *get, char *url)
 	char* resource = "/";
 	char* hostname;
 	
-	if (check_protocoll(url))
+	if (check_protocol(url))
 	{
 		printf("Does not start with http://\n");
 		exit(EXIT_FAILURE);
@@ -66,14 +61,12 @@ void parse_url(request *get, char *url)
 	{
 		c = url[i];
 
-		if ( c == '/' || 
-			 c == '&' || 
-			 c == ';' || 
-			 c == '?' ||
-			 c == ':' ||
-			 c == '@' ||
+		if ( c == '/' || c == '&' || c == ';' || 
+			 c == '?' || c == ':' || c == '@' ||
 			 c == '&' ){
 
+
+			// maybe call free?
 			hostname = malloc(i * sizeof(char));
 			strncpy(hostname, url, i);
 
@@ -89,17 +82,67 @@ void parse_url(request *get, char *url)
 	//printf("hostname: %s\n", hostname);
 	//printf("resource: %s\n", resource);
 
+	//free(hostname);
+	//free(resource);
+
 	get->resource = resource;
 	get->hostname = hostname;
 }
 
+
+FILE* create_socket(struct addrinfo *ai)
+{
+	int sockfd = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
+	if (sockfd < 0)
+	{
+		printf("Failed to open socket\n");
+		exit(EXIT_FAILURE);
+	}
+
+	if ((connect(sockfd, ai->ai_addr, ai->ai_addrlen)) < 0)
+	{
+		printf("Failed to connect\n");
+		exit(EXIT_FAILURE);
+	}
+
+	return fdopen(sockfd, "r+");
+}
+
+FILE* parse_dir(char *dir, char *r){
+	char *resource;
+	if (strcmp(r, "/") == 0){
+		resource = "/index.html"; // not sure if memory save
+	} else {
+
+		resource = malloc(sizeof(char) * strlen(r));
+
+		printf("last char of dir%c\n", r[strlen(r) - 1]);
+		if (r[strlen(r) - 1] == "/"){
+			strncpy(resource, r, strlen(r) - 1); 
+		} else {
+			strcpy(resource, r);
+		}
+
+
+	}
+
+	char *path = malloc(sizeof(char) * (strlen(resource) + strlen(dir)));
+	strcat(path, dir);
+	strcat(path, resource);
+	printf("PATH: %s\n", path);
+
+	return fopen(path, "w");
+
+}
+
 int main(int argc, char *argv[])
 {
-	int c;
-	char *outfile = "NULL";
-	char *directory = "NULL";
+	int c, out_opt = 1;
+	char *outfile = NULL;
+	char *directory = NULL;
 	char *port = "80";
 	char *url = "localhost";
+
 
 	// reads in command line arguments
 	while( (c = getopt(argc, argv, "p:o:d:h")) != -1 ){
@@ -110,10 +153,12 @@ int main(int argc, char *argv[])
 
 			case 'o':
 				outfile = optarg;
+				out_opt = 2;
 				break;
 
 			case 'd':
 				directory = optarg;
+				out_opt = 3;
 				break;
 
 			case 'h':
@@ -142,44 +187,82 @@ int main(int argc, char *argv[])
 
 	getaddrinfo(rq->hostname, port, &hints, &ai);
 
-	int sockfd = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
-	if (sockfd < 0)
-	{
-		printf("Failed to open socket\n");
-		exit(EXIT_FAILURE);
+	FILE *sockfp = create_socket(ai);
+	FILE *fp;
+
+	// chose output option
+	switch ( out_opt ){
+		case (1):
+			fp = fdopen(out_opt, "w"); // stdout
+			break;
+		case (2):
+			fp = fopen(outfile, "w");
+			break;
+
+		case (3):
+			fp = parse_dir(directory, rq->resource);
+			break;
+
+		default:
+			assert(0);
+
 	}
+	
 
-	if ((connect(sockfd, ai->ai_addr, ai->ai_addrlen)) < 0)
-	{
-		printf("Failed to connect\n");
-		exit(EXIT_FAILURE);
-	}
 
-	FILE *sockfp = fdopen(sockfd, "r+");
 
-	//out = get_out(outfile, directory);
-	FILE *out = fopen("out.txt", "w");
+	//FILE *fp = get_out(outfile, directory);
 
-	if(out == NULL) {
+	if(fp == NULL) {
 		fprintf(stderr, "fopen failed: %s\n", strerror(errno));
 		exit(EXIT_FAILURE);
 	}
 
 	GET(stdout, rq); // for debugging only
 	GET(sockfp, rq);
+	free(rq);
 
 	char buf[1024];
-	
+	int first_line = 1, header = 1;
+	int status_code;
+
     while (fgets(buf, sizeof(buf), sockfp) != NULL){
-		fputs(buf, stdout);
-		fputs(buf, out);
+    	if (first_line){
+
+    		if ( (status_code = check_response(buf) ) == 0) 
+    		{
+    			fprintf(stderr, "Protocol error!\n");
+    			exit(2);
+
+    		} else if (status_code != 200){
+	    		fputs(buf+9, fp);
+	    		exit(3);
+
+    		} else {
+    			first_line = 0;
+    			continue;
+    		}
+    	}
+
+    	if (header)
+    	{
+    		if (memcmp(buf, "\r\n", 2) == 0) // check for end of header
+    		{
+    			header = 0;
+    			continue;
+    		} else {
+    			continue;
+    		}
+    	}
+
+
+		fputs(buf, fp);
 		memset(buf, 0, sizeof(buf));
     } 
     
 
-	printf("test\n");
     fclose(sockfp);
-    fclose(out);
+    fclose(fp);
 
 	return EXIT_SUCCESS;
 }

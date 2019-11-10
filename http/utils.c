@@ -30,8 +30,9 @@ void RESPONSE_HEADER(FILE *socket, response_header *rsp){
 		"HTTP/1.1 %d %s\r\n" 
 		"Date: %s\r\n"
 		"Content-Length: %d\r\n"
-		"Connection: close\r\n", 
-		rsp->http_err_code, rsp->http_err, rsp->date, rsp->con_len);
+		"Connection: close\r\n"
+		"\r\n", 
+		rsp->http_err_code, rsp->http_err, rsp->date, rsp->content_len);
 	fflush(socket);
 
 }

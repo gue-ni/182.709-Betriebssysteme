@@ -2,7 +2,7 @@
 
 #define ERROR_EXIT(...) { fprintf(stderr, "ERROR: " __VA_ARGS__); exit(EXIT_FAILURE); }
 
-// HTTP request-header
+// HTTP GET request-header
 typedef struct {
 	char *hostname;
 	char *resource;
@@ -13,7 +13,7 @@ typedef struct {
 	int http_err_code;
 	char *http_err;
 	char *date;
-	int con_len;
+	int content_len;
 	char *con_stat;
 } response_header;
 
