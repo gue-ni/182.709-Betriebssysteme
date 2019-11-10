@@ -17,7 +17,6 @@
 #include <errno.h>
 #include <assert.h>
 
-
 int check_protocol(char *url){
 	return memcmp(url, "http://", 7);
 }
@@ -65,7 +64,6 @@ void parse_url(request *get, char *url)
 			 c == '?' || c == ':' || c == '@' ||
 			 c == '&' ){
 
-
 			// maybe call free?
 			hostname = malloc(i * sizeof(char));
 			if (hostname == NULL)
@@ -91,9 +89,7 @@ void parse_url(request *get, char *url)
 	//free(hostname); this does not work. why???
 	//free(resource);
 
-
 }
-
 
 FILE* create_socket(struct addrinfo *ai)
 {
@@ -124,6 +120,7 @@ FILE* parse_dir(char *dir, char *r){
 			exit(EXIT_FAILURE);
 
 		strcpy(resource, "/index.html");
+
 	} else {
 		resource = malloc(sizeof(char) * strlen(r));
 
@@ -153,14 +150,13 @@ FILE* parse_dir(char *dir, char *r){
 	if (path == NULL)
 		exit(EXIT_FAILURE);
 
-
 	strcat(path, directory);
 	strcat(path, resource);
 
 	free(resource);
 	free(directory);
-	return fopen(path, "w");
 
+	return fopen(path, "w");
 }
 
 int main(int argc, char *argv[])
@@ -170,7 +166,6 @@ int main(int argc, char *argv[])
 	char *directory = NULL;
 	char *port = "80";
 	char *url = "localhost";
-
 
 	// reads in command line arguments
 	while( (c = getopt(argc, argv, "p:o:d:h")) != -1 ){
@@ -239,7 +234,6 @@ int main(int argc, char *argv[])
 
 		default:
 			assert(0);
-
 	}
 
 	if(fp == NULL) {
@@ -258,8 +252,8 @@ int main(int argc, char *argv[])
 	int status_code;
 
     while (fgets(buf, sizeof(buf), sockfp) != NULL){
-    	if (fl){
 
+    	if (fl){
     		status_code = check_response(buf);
 
     		if ( status_code == 0) 
@@ -292,7 +286,6 @@ int main(int argc, char *argv[])
 //		fwrite(buf, 1024, 1, fp);
 		memset(buf, 0, sizeof(buf));
     } 
-    
 
     fclose(sockfp);
     fclose(fp);
