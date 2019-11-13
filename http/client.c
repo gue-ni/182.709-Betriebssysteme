@@ -44,8 +44,8 @@ int check_response(char *buf){
 
 void parse_url(request *get, char *url)
 {
-	char* resource = "/";
-	char* hostname;
+	char *resource = "/";
+	char *hostname;
 	
 	if (check_protocol(url))
 	{
@@ -60,18 +60,19 @@ void parse_url(request *get, char *url)
 	{
 		c = url[i];
 
-		if ( c == '/' || c == '&' || c == ';' || 
-			 c == '?' || c == ':' || c == '@' ||
-			 c == '&' ){
+		if ( c == '/' || c == '&' || c == ';' ||  c == '?' 
+			          || c == ':' || c == '@' || c == '&' ){
 
 			// maybe call free?
 			hostname = malloc(i * sizeof(char));
+		
 			if (hostname == NULL)
 				exit(EXIT_FAILURE);
 
 			strncpy(hostname, url, i);
 
 			resource = malloc(strlen(url) - i * sizeof(char));
+
 			if (resource == NULL)
 				exit(EXIT_FAILURE);
 
@@ -86,8 +87,8 @@ void parse_url(request *get, char *url)
 	get->resource = resource;
 	get->hostname = hostname;
 
-	//free(hostname); this does not work. why???
-	//free(resource);
+//	free(hostname);  // this does not work. why???
+//	free(resource);
 
 }
 
@@ -113,7 +114,8 @@ FILE* parse_dir(char *dir, char *r){
 	char *resource;
 	char *directory;
 
-	if (strcmp(r, "/") == 0){
+	if (strcmp(r, "/") == 0)
+	{
 		resource = malloc(sizeof(char) * 11);
 
 		if (resource == NULL)
@@ -135,7 +137,8 @@ FILE* parse_dir(char *dir, char *r){
 	if (directory == NULL)
 		exit(EXIT_FAILURE);
 
-	if ((char) dir[strlen(dir) - 1] == '/'){
+	if ((char) dir[strlen(dir) - 1] == '/')
+	{
 		directory = malloc(sizeof(char) * strlen(dir) - 1);
 
 		if (directory == NULL)
@@ -147,6 +150,7 @@ FILE* parse_dir(char *dir, char *r){
 	}
 
 	char *path = malloc(sizeof(char) * (strlen(resource) + strlen(directory)));
+	
 	if (path == NULL)
 		exit(EXIT_FAILURE);
 
@@ -215,8 +219,7 @@ int main(int argc, char *argv[])
 
 	getaddrinfo(rq->hostname, port, &hints, &ai);
 
-	FILE *sockfp = create_socket(ai);
-	FILE *fp;
+	FILE *fp, *sockfp = create_socket(ai);
 
 	// chose output option
 	switch ( out_opt ){
@@ -236,24 +239,26 @@ int main(int argc, char *argv[])
 			assert(0);
 	}
 
-	if(fp == NULL) {
+	if(fp == NULL) 
+	{
 		fprintf(stderr, "fopen failed: %s\n", strerror(errno));
 		exit(EXIT_FAILURE);
 	}
 
-	printf("##########################\n");
-	GET(stdout, rq); // for debugging only
-	printf("##########################\n");
+	// printf("##########################\n");
+	// GET(stdout, rq); // for debugging only
+	// printf("##########################\n");
 	GET(sockfp, rq);
 	free(rq);
-
+    
 	char buf[1024];
 	int fl = 1, header = 1;
 	int status_code;
 
     while (fgets(buf, sizeof(buf), sockfp) != NULL){
 
-    	if (fl){
+    	if (fl)
+    	{
     		status_code = check_response(buf);
 
     		if ( status_code == 0) 
@@ -283,7 +288,6 @@ int main(int argc, char *argv[])
     	}
 
 		fputs(buf, fp);
-//		fwrite(buf, 1024, 1, fp);
 		memset(buf, 0, sizeof(buf));
     } 
 
