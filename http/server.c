@@ -16,6 +16,7 @@
 #include <errno.h>
 #include <assert.h>
 #include <time.h>
+#include <signal.h>
 
 
 void prog_usage(char *myprog)
@@ -249,24 +250,24 @@ int main(int argc, char *argv[])
 				while(fgets(f_buf, sizeof(f_buf), resource) != NULL)
 				{
 					fputs(f_buf, connection);
-					fputs(f_buf, stdout);
+					fputs(f_buf, stdout); // TODO remove
 					memset(f_buf, 0, sizeof(f_buf));
 				}
 				fflush(connection);
 				break;
 
 			case (400):
-				respond_error(stderr, status_code, "Bad Request");
+				respond_error(stderr, status_code, "Bad Request");  // TODO remove
 				respond_error(connection, status_code, "Bad Request");
 				break;
 
 			case (404):
-				respond_error(stderr, status_code, "Not found");
+				respond_error(stderr, status_code, "Not found"); // TODO remove
 				respond_error(connection, status_code, "Not found");
 				break;
 
 			case (501):
-				respond_error(stderr, status_code, "Not implemented");
+				respond_error(stderr, status_code, "Not implemented"); // TODO remove
 				respond_error(connection, status_code, "Not implemented");
 				break;
 
