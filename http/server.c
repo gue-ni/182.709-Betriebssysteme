@@ -17,6 +17,7 @@
 #include <assert.h>
 #include <time.h>
 
+
 void prog_usage(char *myprog)
 {
 	fprintf(stderr, "Usage: %s [-p PORT] [-i INDEX] DOC_ROOT\n", myprog);
@@ -89,12 +90,29 @@ void respond_ok(FILE *socket, int content_length)
 	fflush(socket);
 }
 
-int parse_path(char *path, FILE **resource)
+int parse_path(char *path, FILE **resource, char *index, char *doc_root)
 {
-	path += 1;
-	printf("Path: %s\n", path);
+	// TODO prepend dir
+	// TODO / == index.html
+	printf("Parsing path!\n");
 
-	if ( (*resource = fopen(path, "r")) != NULL)
+	char *file_path;
+	char *full_path;
+	
+	if (memcmp(path, "\000", 1) == 0){
+		printf("using default path\n"); // TODO remove
+		file_path = index;
+
+	} else {
+		file_path = path;
+	}
+	full_path = malloc(sizeof(char) * (sizeof(doc_root) + sizeof(file_path)));
+	memset(full_path, 0, sizeof(*full_path));
+	strcat(full_path, doc_root);
+	strcat(full_path, file_path);
+
+	printf("Opening file: %s\n", full_path);
+	if ( (*resource = fopen(full_path, "r") ) != NULL)
 	{
 		return 200;
 	} else {
@@ -102,12 +120,17 @@ int parse_path(char *path, FILE **resource)
 	}
 }
 
-int parse_request(char *rq, char **path)
-{
-	if (memcmp(rq, "GET", 3) != 0)
-		return 501;
 
-	rq += 4;
+int parse_request(char *rq, char **path, FILE **resource)
+{
+	printf("Parsing Request!\n");
+
+	// request type not implemented
+	if (memcmp(rq, "GET", 3) != 0){
+		return 501;
+	}
+
+	rq += 5; // cut away "GET /"
 
 	int c;
 	for (int i = 0; i < strlen(rq); ++i)
@@ -115,11 +138,6 @@ int parse_request(char *rq, char **path)
 		c = rq[i];
 		if(c == ' ')
 		{
-			*path = malloc(i * sizeof(char));
-			if (*path == NULL)
-				fprintf(stderr, "%s\n", "error");
-
-//			memset(path, 0, sizeof(path)); causes error
 			strncpy(*path, rq, i);
 			rq += (++i);
 			break;
@@ -129,14 +147,16 @@ int parse_request(char *rq, char **path)
 	if (memcmp(rq, "HTTP/1.1", 8) != 0)
 		return 400;
 	
-	return 0;
+	//return parse_path(*path, resource); // returns either 200 or 404
+	return 0; 
 }
 
 int main(int argc, char *argv[])
 {
 	int c;
-	char *index = "index.html";
 	char *port = "8080";
+	char *index = "index.html";
+	char *doc_root = "";
 
 	// reads in command line arguments
 	while( (c = getopt(argc, argv, "p:i:h")) != -1 ){
@@ -160,9 +180,8 @@ int main(int argc, char *argv[])
 				break;
 		}
 	}
-
-	fprintf(stderr, "Server started, listening on %s\n", port);
-	fprintf(stderr, "%s\n", "########################################");
+	if (optind < argc)
+		doc_root = argv[optind];
 
 	struct addrinfo hints, *ai;
 	memset(&hints, 0, sizeof hints);
@@ -177,10 +196,11 @@ int main(int argc, char *argv[])
 	}
 
 	int sockfd = listen_socket(ai);
-
-	int new_socket_fd; 
-	FILE *connection = NULL;
-	FILE *resource = NULL;
+	int new_socket_fd, status_code, fl; 
+  	long content_length;	
+	FILE *connection = NULL, *resource = NULL;
+	char *path = malloc(sizeof(char) * 64); 
+	char buf[1024], h_buf[256], f_buf[1024];
 
 	while (1){
 		if ((new_socket_fd = accept(sockfd, ai->ai_addr, &ai->ai_addrlen)) < 0){
@@ -191,28 +211,40 @@ int main(int argc, char *argv[])
 		connection = fdopen(new_socket_fd, "r+");
 		resource = NULL;
 
-		char buf[512];
-		char f_buf[1024];
+		fl = 1;
+	   	while(fgets(h_buf, sizeof(h_buf), connection) != NULL)
+	   	{
+	   		fprintf(stderr, "%s", h_buf);
 
-	   	if(fgets(buf, sizeof(buf), connection) == NULL)
-	   		fprintf(stderr, "%s\n", "error");
+	   		if (fl){
+	   			memcpy(buf, h_buf, sizeof(h_buf)); // is this correct 
+	   			fl = 0;
+	   		}
 
-	   	fprintf(stderr, "\n%s\n", buf);
+	   		if (memcmp(h_buf, "\r\n", 2) == 0) // end of header
+	   			break;
+	   	}
 
-	   	char *path = NULL; // would cause error otherwise
+	   	fprintf(stderr, "First line of Request: \n%s\n", buf);
 
-	   	int status_code; 
-	   	long content_length;	
-	   	status_code = parse_request(buf, &path);
-	   	status_code = parse_path(path, &resource);
+	   	status_code = parse_request(buf, &path, &resource);
+	   	if (status_code == 0)
+	   	{
+	   		status_code = parse_path(path, &resource, index, doc_root);
+	   	}
 
-		printf("\n");
+	   	// TODO remove
+	   	// ######################################################################################
+//	   	printf("/: %s\n", index);
+	   	printf("status_code: %d\n\n", status_code);
+	   	// ######################################################################################
+
 		switch(status_code){
 			case (200):
 				content_length = get_file_size(resource);				
 
 				respond_ok(connection, content_length);
-				respond_ok(stderr, content_length);
+				respond_ok(stderr, content_length); // TODO remove
 
 				while(fgets(f_buf, sizeof(f_buf), resource) != NULL)
 				{
@@ -224,17 +256,17 @@ int main(int argc, char *argv[])
 				break;
 
 			case (400):
-				respond_error(stdout, status_code, "Bad Request\n");
+				respond_error(stderr, status_code, "Bad Request");
 				respond_error(connection, status_code, "Bad Request");
 				break;
 
 			case (404):
-				respond_error(stdout, status_code, "Not found\n");
+				respond_error(stderr, status_code, "Not found");
 				respond_error(connection, status_code, "Not found");
 				break;
 
 			case (501):
-				respond_error(stdout, status_code, "Not implemented\n");
+				respond_error(stderr, status_code, "Not implemented");
 				respond_error(connection, status_code, "Not implemented");
 				break;
 
@@ -242,15 +274,21 @@ int main(int argc, char *argv[])
 				assert(0);
 				break;
 		}
-		//printf("Closing\n");	
+
 		fclose(connection);
 		if (resource != NULL)
 			fclose(resource);
-		printf("\n########################################\n");			
+
 		memset(buf, 0, sizeof(buf));
+		memset(h_buf, 0, sizeof(h_buf));
+		memset(f_buf, 0, sizeof(f_buf));	
+		memset(path, 0, sizeof(*path));
+
+		printf("\n########################################\n");			
 	}
 
 	freeaddrinfo(ai);
+	free(path);
 
 	return EXIT_SUCCESS;
 }

@@ -17,17 +17,16 @@
 #include <errno.h>
 #include <assert.h>
 
-void GET(FILE *socket, request *rq)
+
+
+void POST(FILE *socket, request *rq)
 {
-	fprintf(socket, "GET %s HTTP/1.1\r\n"
-//					"Host: %s\r\n"
-//					"Connection: close\r\n\r\n", rq->resource, rq->hostname);
+	fprintf(socket, "POST %s HTTP/1.1\r\n"
 					, rq->resource);
 	fflush(socket);
 }
 
-
-void GET_v2(FILE *socket, request *rq)
+void GET(FILE *socket, request *rq)
 {
 	fprintf(socket, "GET %s HTTP/1.1\r\n"
 					"Host: %s\r\n"
