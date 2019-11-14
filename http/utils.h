@@ -17,10 +17,7 @@ typedef struct {
 	char *con_stat;
 } response_header;
 
-typedef struct {
-	response_header *header;
-	char *file_buffer;
-} response;
+
 
 
 void prog_usage(char *myprog);

@@ -20,10 +20,11 @@ void GET(FILE *socket, request *rq)
 	fflush(socket);
 }
 
-void parse_hostname()
-{
-	
-}
+
+
+
+
+
 
 void RESPONSE_HEADER(FILE *socket, response_header *rsp){
 	fprintf(socket, 
@@ -38,16 +39,8 @@ void RESPONSE_HEADER(FILE *socket, response_header *rsp){
 }
 
 
-void prog_usage(char *myprog)
-{
-	fprintf(stderr, "Usage: %s [-p PORT] [-i INDEX] DOC_ROOT\n", myprog);
-	exit(EXIT_FAILURE);
-}
 
 
 
-int parse_request(char buf[])
-{
-	return 0;
-}
+
 

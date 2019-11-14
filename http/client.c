@@ -21,12 +21,34 @@ int check_protocol(char *url){
 	return memcmp(url, "http://", 7);
 }
 
+FILE* create_socket(struct addrinfo *ai)
+{
+	int sockfd = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
+	if (sockfd < 0)
+	{
+		printf("Failed to open socket\n");
+		exit(EXIT_FAILURE);
+	}
+
+	if ((connect(sockfd, ai->ai_addr, ai->ai_addrlen)) < 0)
+	{
+		printf("Failed to connect\n");
+		exit(EXIT_FAILURE);
+	}
+
+	return fdopen(sockfd, "r+");
+}
+
 // returns 0 if it does not start with HTTP/1.1, else HTTP code
 int check_response(char *buf){
-	
+	fprintf(stderr, "%s\n", "Buffer:");
+	fwrite(buf, 1, sizeof(buf), stderr);
+	fprintf(stderr, "\n");
+		
 	if (memcmp(buf, "HTTP/1.", 7) != 0) // TODO change this to 1.1
 	{
-		printf("Protocol error!\n");
+
+		//printf("Protocol error!\n");
 		return 0;
 	} else {
 		buf += 8;
@@ -90,24 +112,6 @@ void parse_url(request *get, char *url)
 //	free(hostname);  // this does not work. why???
 //	free(resource);
 
-}
-
-FILE* create_socket(struct addrinfo *ai)
-{
-	int sockfd = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
-	if (sockfd < 0)
-	{
-		printf("Failed to open socket\n");
-		exit(EXIT_FAILURE);
-	}
-
-	if ((connect(sockfd, ai->ai_addr, ai->ai_addrlen)) < 0)
-	{
-		printf("Failed to connect\n");
-		exit(EXIT_FAILURE);
-	}
-
-	return fdopen(sockfd, "r+");
 }
 
 FILE* parse_dir(char *dir, char *r){
@@ -189,12 +193,12 @@ int main(int argc, char *argv[])
 				break;
 
 			case 'h':
-				prog_usage(argv[0]);
+				//prog_usage(argv[0]);
 				exit(EXIT_FAILURE);
 				break;
 
 			default:
-				prog_usage(argv[0]);
+				//prog_usage(argv[0]);
 				exit(EXIT_FAILURE);
 				break;
 		}
@@ -245,20 +249,23 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	// printf("##########################\n");
-	// GET(stdout, rq); // for debugging only
-	// printf("##########################\n");
+	printf("##########################\n");
+	GET(stdout, rq); // for debugging only
+	printf("##########################\n");
 	GET(sockfp, rq);
 	free(rq);
+	fflush(sockfp);
     
 	char buf[1024];
-	int fl = 1, header = 1;
-	int status_code;
+	int fl = 1, header = 1, status_code;
 
+	
+	printf("Waiting for response\n");
     while (fgets(buf, sizeof(buf), sockfp) != NULL){
 
     	if (fl)
     	{
+    		fputs(buf, fp); // TODO remove
     		status_code = check_response(buf);
 
     		if ( status_code == 0) 
