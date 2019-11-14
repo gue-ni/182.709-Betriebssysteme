@@ -15,6 +15,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <assert.h>
+#include <time.h>
 
 void prog_usage(char *myprog)
 {
@@ -22,52 +23,77 @@ void prog_usage(char *myprog)
 	exit(EXIT_FAILURE);
 }
 
-FILE* listen_socket(struct addrinfo *ai)
+int listen_socket(struct addrinfo *ai)
 {
 	int sockfd = socket(ai->ai_family, ai->ai_socktype,ai->ai_protocol);
 
 	if(sockfd < 0) 
-	{
-		// error
-	}
+		exit(EXIT_FAILURE);
 
 	int optval = 1;
 	setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof optval);
 
 	if(bind(sockfd, ai->ai_addr, ai->ai_addrlen) < 0) 
-	{
-		// error
-
-	}
+		exit(EXIT_FAILURE);
 
 	if (listen(sockfd, 10) < 0)
-	{
-		// error
-	}
+		exit(EXIT_FAILURE);
 
-	int new_socket_fd; 
-
-	if ((new_socket_fd = accept(sockfd, ai->ai_addr, &ai->ai_addrlen)) < 0){
-		// error
-	}
-
-	return fdopen(new_socket_fd, "r+");
+	 return sockfd;
 }
 
 void respond_error(FILE *socket, int code, char* reason_phrase)
 {
-	fprintf(socket, "HTTP/1.1 %d %s\r\n\r\n", code, reason_phrase);
+	fprintf(socket, "HTTP/1.1 %d %s\r\n", code, reason_phrase);
 	fflush(socket);
 }
 
-void respond_ok(FILE *socket)
+long get_file_size(FILE *f)
 {
-	fprintf(socket, "HTTP/1.1 200 OK\r\n\r\n");
+	long size;
+	fseek(f, 0, SEEK_END);
+	size  = ftell(f);
+	fseek(f, 0, SEEK_SET);	
+	return size;
+}
+
+void rfc822_time(char *time_buf)
+{
+	time_t t;
+	time(&t);
+	struct tm *info;
+	info = gmtime(&t);
+	strftime(time_buf, sizeof(time_buf),"%a, %d %b %g %T GMT", info);
+}
+
+void respond_ok(FILE *socket, int content_length)
+{
+	char time_buf[30] = {0};
+	
+	time_t t;
+	time(&t);
+	struct tm *info;
+	info = gmtime(&t);
+	strftime(time_buf, sizeof(time_buf),"%a, %d %b %g %T GMT", info);
+	
+	// why doesn't this work?
+	//rfc822_time(time_buf);
+
+	fprintf(socket, 
+			"HTTP/1.1 200 OK\r\n"
+			"Date: %s\r\n"
+			"Content-Length: %d\r\n"
+			"Connection: close\r\n"
+			"\r\n"
+			,time_buf ,content_length);
 	fflush(socket);
 }
 
 int parse_path(char *path, FILE **resource)
 {
+	path += 1;
+	printf("Path: %s\n", path);
+
 	if ( (*resource = fopen(path, "r")) != NULL)
 	{
 		return 200;
@@ -93,12 +119,12 @@ int parse_request(char *rq, char **path)
 			if (*path == NULL)
 				fprintf(stderr, "%s\n", "error");
 
+//			memset(path, 0, sizeof(path)); causes error
 			strncpy(*path, rq, i);
 			rq += (++i);
 			break;
 		}
 	}
-
 
 	if (memcmp(rq, "HTTP/1.1", 8) != 0)
 		return 400;
@@ -135,8 +161,8 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	printf("Port: %s\n", port);
-
+	fprintf(stderr, "Server started, listening on %s\n", port);
+	fprintf(stderr, "%s\n", "########################################");
 
 	struct addrinfo hints, *ai;
 	memset(&hints, 0, sizeof hints);
@@ -150,59 +176,51 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "%s\n", "error");
 	}
 
-
-		int sockfd = socket(ai->ai_family, ai->ai_socktype,ai->ai_protocol);
-
-	if(sockfd < 0) 
-	{
-		// error
-	}
-
-	int optval = 1;
-	setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof optval);
-
-	if(bind(sockfd, ai->ai_addr, ai->ai_addrlen) < 0) 
-	{
-		// error
-
-	}
-
-	if (listen(sockfd, 10) < 0)
-	{
-		// error
-	}
+	int sockfd = listen_socket(ai);
 
 	int new_socket_fd; 
-	FILE *connection;
-	FILE *resource;
+	FILE *connection = NULL;
+	FILE *resource = NULL;
 
 	while (1){
 		if ((new_socket_fd = accept(sockfd, ai->ai_addr, &ai->ai_addrlen)) < 0){
 				// error
+				exit(EXIT_FAILURE);
 		}
- 
+
 		connection = fdopen(new_socket_fd, "r+");
 		resource = NULL;
 
 		char buf[512];
+		char f_buf[1024];
 
 	   	if(fgets(buf, sizeof(buf), connection) == NULL)
 	   		fprintf(stderr, "%s\n", "error");
 
-	   	fprintf(stderr, "Request: %s\n", buf);
+	   	fprintf(stderr, "\n%s\n", buf);
 
 	   	char *path = NULL; // would cause error otherwise
 
-	   	int status_code = 200;	
-//	   	status_code = parse_request(buf, &path);
-	   	//status_code = parse_path(path, &resource);
-	   	//fprintf(stderr, "Status code: %d\n", status_code);
+	   	int status_code; 
+	   	long content_length;	
+	   	status_code = parse_request(buf, &path);
+	   	status_code = parse_path(path, &resource);
 
-		printf("Responding with:\n");
+		printf("\n");
 		switch(status_code){
 			case (200):
-				respond_ok(connection);
-				respond_ok(stderr);
+				content_length = get_file_size(resource);				
+
+				respond_ok(connection, content_length);
+				respond_ok(stderr, content_length);
+
+				while(fgets(f_buf, sizeof(f_buf), resource) != NULL)
+				{
+					fputs(f_buf, connection);
+					fputs(f_buf, stdout);
+					memset(f_buf, 0, sizeof(f_buf));
+				}
+				fflush(connection);
 				break;
 
 			case (400):
@@ -225,12 +243,12 @@ int main(int argc, char *argv[])
 				break;
 		}
 		//printf("Closing\n");	
-		//fclose(connection);
+		fclose(connection);
+		if (resource != NULL)
+			fclose(resource);
 		printf("\n########################################\n");			
 		memset(buf, 0, sizeof(buf));
-
 	}
-
 
 	freeaddrinfo(ai);
 

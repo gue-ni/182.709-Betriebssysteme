@@ -12,13 +12,6 @@
 
 
 
-void GET(FILE *socket, request *rq)
-{
-	fprintf(socket, "GET %s HTTP/1.1\r\n"
-					"Host: %s\r\n"
-					"Connection: close\r\n\r\n", rq->resource, rq->hostname);
-	fflush(socket);
-}
 
 
 

@@ -17,6 +17,24 @@
 #include <errno.h>
 #include <assert.h>
 
+void GET(FILE *socket, request *rq)
+{
+	fprintf(socket, "GET %s HTTP/1.1\r\n"
+//					"Host: %s\r\n"
+//					"Connection: close\r\n\r\n", rq->resource, rq->hostname);
+					, rq->resource);
+	fflush(socket);
+}
+
+
+void GET_v2(FILE *socket, request *rq)
+{
+	fprintf(socket, "GET %s HTTP/1.1\r\n"
+					"Host: %s\r\n"
+					"Connection: close\r\n\r\n", rq->resource, rq->hostname);
+	fflush(socket);
+}
+
 int check_protocol(char *url){
 	return memcmp(url, "http://", 7);
 }
@@ -41,9 +59,6 @@ FILE* create_socket(struct addrinfo *ai)
 
 // returns 0 if it does not start with HTTP/1.1, else HTTP code
 int check_response(char *buf){
-	fprintf(stderr, "%s\n", "Buffer:");
-	fwrite(buf, 1, sizeof(buf), stderr);
-	fprintf(stderr, "\n");
 		
 	if (memcmp(buf, "HTTP/1.", 7) != 0) // TODO change this to 1.1
 	{
@@ -259,13 +274,11 @@ int main(int argc, char *argv[])
 	char buf[1024];
 	int fl = 1, header = 1, status_code;
 
-	
-	printf("Waiting for response\n");
     while (fgets(buf, sizeof(buf), sockfp) != NULL){
 
     	if (fl)
     	{
-    		fputs(buf, fp); // TODO remove
+//    		fputs(buf, fp); // TODO remove
     		status_code = check_response(buf);
 
     		if ( status_code == 0) 
@@ -285,6 +298,7 @@ int main(int argc, char *argv[])
 
     	if (header)
     	{
+ //   		fputs(buf, fp); // TODO remove
     		if (memcmp(buf, "\r\n", 2) == 0) // check for end of header
     		{
     			header = 0;
