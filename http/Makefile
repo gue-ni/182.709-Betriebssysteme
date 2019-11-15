@@ -1,4 +1,4 @@
-#	@author: Jakob G. Maier <e11809618@student.tuwien.ac.at>
+1#	@author: Jakob G. Maier <e11809618@student.tuwien.ac.at>
 #	@date: 2019-19-24
 #	@brief: Makefile for server and client
 
