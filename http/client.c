@@ -17,7 +17,11 @@
 #include <errno.h>
 #include <assert.h>
 
-
+void prog_usage(char *myprog)
+{
+	fprintf(stderr, "Usage: %s [-p PORT] [ -o FILE | -d DIR ] URL\n", myprog);
+	exit(EXIT_FAILURE);
+}
 
 void POST(FILE *socket, request *rq)
 {
@@ -80,8 +84,8 @@ int check_response(char *buf){
 
 void parse_url(request *get, char *url)
 {
-	char *resource = "/";
-	char *hostname;
+	char *rs = "/";
+	char *hn;
 	
 	if (check_protocol(url))
 	{
@@ -100,31 +104,31 @@ void parse_url(request *get, char *url)
 			          || c == ':' || c == '@' || c == '&' ){
 
 			// maybe call free?
-			hostname = malloc(i * sizeof(char));
+			hn = malloc(i * sizeof(char));
 		
-			if (hostname == NULL)
+			if (hn == NULL)
 				exit(EXIT_FAILURE);
 
-			strncpy(hostname, url, i);
+			strncpy(hn, url, i);
 
-			resource = malloc(strlen(url) - i * sizeof(char));
+			rs = malloc(strlen(url) - i * sizeof(char));
 
-			if (resource == NULL)
+			if (rs == NULL)
 				exit(EXIT_FAILURE);
 
-			strcpy(resource, url += i);
+			strcpy(rs, url += i);
 			break;
 		}
 	}	
 
-	if (hostname == NULL)
-		hostname = url;
+	if (hn == NULL)
+		hn = url;
 
-	get->resource = resource;
-	get->hostname = hostname;
+	get->resource = rs;
+	get->hostname = hn;
 
-//	free(hostname);  // this does not work. why???
-//	free(resource);
+	//free(hn);  // this does not work. why???
+	//free(rs);
 
 }
 
@@ -184,10 +188,11 @@ FILE* parse_dir(char *dir, char *r){
 int main(int argc, char *argv[])
 {
 	int c, out_opt = 1;
+
+	char *port = "80";
 	char *outfile = NULL;
 	char *directory = NULL;
-	char *port = "80";
-	char *url = "localhost";
+	char *url = NULL;
 
 	// reads in command line arguments
 	while( (c = getopt(argc, argv, "p:o:d:h")) != -1 ){
@@ -207,12 +212,12 @@ int main(int argc, char *argv[])
 				break;
 
 			case 'h':
-				//prog_usage(argv[0]);
+				prog_usage(argv[0]);
 				exit(EXIT_FAILURE);
 				break;
 
 			default:
-				//prog_usage(argv[0]);
+				prog_usage(argv[0]);
 				exit(EXIT_FAILURE);
 				break;
 		}
@@ -220,15 +225,17 @@ int main(int argc, char *argv[])
 
 	url = argv[optind];
 
+	if (url == NULL)
+	{	
+		prog_usage(argv[0]);
+		exit(EXIT_FAILURE);
+	}
+
 	request *rq = malloc(sizeof(request));
 	if (rq == NULL)
 		exit(EXIT_FAILURE);
 
 	parse_url(rq, url);
-	
-	// TODO remove
-//	printf("%s\n", rq->hostname);
-//	printf("%s\n", rq->resource);
 
 	struct addrinfo hints, *ai;
 	memset(&hints, 0, sizeof hints);
@@ -263,9 +270,6 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	//printf("##########################\n");
-	//GET(stdout, rq); // for debugging only
-	//printf("##########################\n");
 	GET(sockfp, rq);
 	free(rq);
 	fflush(sockfp);

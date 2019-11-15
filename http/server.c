@@ -103,13 +103,14 @@ int parse_path(char *path, FILE **resource, char *index, char *doc_root)
 	// TODO prepend dir
 	// TODO / == index.html
 	// TODO fix buffer overflow
-	printf("Parsing path!\n"); 
+//	printf("Parsing path!\n"); 
 
 	char *file_path;
 	char *full_path;
 
-	if (doc_root[strlen(doc_root - 1) == '/'])
+	if (doc_root[strlen(doc_root) - 1] != '/')
 	{
+		printf("does not end with /: %s, %c\n", doc_root, doc_root[strlen(doc_root) - 1]);
 		char *tmp = malloc(sizeof(*doc_root) + 1);
 		strcpy(tmp, doc_root);
 		strcat(tmp, "/");
@@ -147,7 +148,7 @@ int parse_path(char *path, FILE **resource, char *index, char *doc_root)
 
 int parse_request(char *rq, char **path, FILE **resource)
 {
-	printf("Parsing Request!\n");
+//	printf("Parsing Request!\n");
 
 	// request type not implemented
 	if (memcmp(rq, "GET", 3) != 0){
@@ -265,7 +266,7 @@ int main(int argc, char *argv[])
 		fl = 1;
 	   	while(fgets(h_buf, sizeof(h_buf), connection) != NULL)
 	   	{
-	   		fprintf(stderr, "%s", h_buf);
+//	   		fprintf(stderr, "%s", h_buf);
 
 	   		if (fl){
 	   			memcpy(buf, h_buf, sizeof(h_buf)); // is this correct 
@@ -276,19 +277,11 @@ int main(int argc, char *argv[])
 	   			break;
 	   	}
 
-	   	fprintf(stderr, "First line of Request: \n%s\n", buf);
-
 	   	status_code = parse_request(buf, &path, &resource);
 	   	if (status_code == 0)
 	   	{
 	   		status_code = parse_path(path, &resource, index, doc_root);
 	   	}
-
-	   	// TODO remove
-	   	// ######################################################################################
-//	   	printf("/: %s\n", index);
-	   	printf("status_code: %d\n\n", status_code);
-	   	// ######################################################################################
 
 		switch(status_code){
 			case (200):
@@ -300,7 +293,7 @@ int main(int argc, char *argv[])
 				while(fgets(f_buf, sizeof(f_buf), resource) != NULL)
 				{
 					fputs(f_buf, connection);
-					fputs(f_buf, stdout); // TODO remove
+//					fputs(f_buf, stdout); // TODO remove
 					memset(f_buf, 0, sizeof(f_buf));
 				}
 				fflush(connection);
@@ -335,7 +328,7 @@ int main(int argc, char *argv[])
 		memset(f_buf, 0, sizeof(f_buf));	
 		memset(path, 0, sizeof(*path));
 
-		printf("\n########################################\n");			
+//		printf("\n########################################\n");			
 	}
 
 	freeaddrinfo(ai);
