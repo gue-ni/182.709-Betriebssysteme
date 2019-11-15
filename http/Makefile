@@ -1,6 +1,6 @@
 #	@author: Jakob G. Maier <e11809618@student.tuwien.ac.at>
 #	@date: 2019-19-24
-#	@brief: Makefile for http server and client, makes all PROGS with includes DEPS(.h)
+#	@brief: Makefile for server and client, makes all PROGS with includes DEPS(.h)
 
 CC = gcc
 # FÜR DIE ABGABE:
@@ -24,6 +24,4 @@ $(PROGS): % : %.o $(DEPS:=.o)
 
 clean:
 	rm -rf *.o $(PROGS)
-
-
 

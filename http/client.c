@@ -263,9 +263,9 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	printf("##########################\n");
-	GET(stdout, rq); // for debugging only
-	printf("##########################\n");
+	//printf("##########################\n");
+	//GET(stdout, rq); // for debugging only
+	//printf("##########################\n");
 	GET(sockfp, rq);
 	free(rq);
 	fflush(sockfp);

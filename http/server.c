@@ -2,7 +2,13 @@
 	@author: Jakob G. Maier <e11809618@student.tuwien.ac.at>
 	@date: 2019-19-24
 	@brief:
+
+	TODO:
+	add signal handling
+	signal handling should work, add clean up
+	improve memory safety
 */
+
 #include "utils.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,6 +24,7 @@
 #include <time.h>
 #include <signal.h>
 
+int run;
 
 void prog_usage(char *myprog)
 {
@@ -95,32 +102,48 @@ int parse_path(char *path, FILE **resource, char *index, char *doc_root)
 {
 	// TODO prepend dir
 	// TODO / == index.html
-	printf("Parsing path!\n");
+	// TODO fix buffer overflow
+	printf("Parsing path!\n"); 
 
 	char *file_path;
 	char *full_path;
+
+	if (doc_root[strlen(doc_root - 1) == '/'])
+	{
+		char *tmp = malloc(sizeof(*doc_root) + 1);
+		strcpy(tmp, doc_root);
+		strcat(tmp, "/");
+		doc_root = tmp;
+	}
 	
 	if (memcmp(path, "\000", 1) == 0){
-		printf("using default path\n"); // TODO remove
 		file_path = index;
 
 	} else {
 		file_path = path;
 	}
 	full_path = malloc(sizeof(char) * (sizeof(doc_root) + sizeof(file_path)));
+	if (full_path == NULL)
+	{
+		exit(EXIT_FAILURE);
+	}
+
 	memset(full_path, 0, sizeof(*full_path));
 	strcat(full_path, doc_root);
 	strcat(full_path, file_path);
 
+	free(doc_root);
+
 	printf("Opening file: %s\n", full_path);
 	if ( (*resource = fopen(full_path, "r") ) != NULL)
 	{
+		free(full_path);
 		return 200;
 	} else {
+		free(full_path);
 		return 404;
 	}
 }
-
 
 int parse_request(char *rq, char **path, FILE **resource)
 {
@@ -152,8 +175,23 @@ int parse_request(char *rq, char **path, FILE **resource)
 	return 0; 
 }
 
+void exit_immediatly(int num)
+{
+	write(STDOUT_FILENO, "\nexit\n", 7);
+	exit(EXIT_SUCCESS);
+}
+
+void complete_request(int num)
+{
+	write(STDOUT_FILENO, "\ncomplete request\n", 18);
+	run = 0;
+}
+
 int main(int argc, char *argv[])
 {
+	signal(SIGINT, exit_immediatly);
+	signal(SIGTERM, exit_immediatly);
+
 	int c;
 	char *port = "8080";
 	char *index = "index.html";
@@ -197,19 +235,31 @@ int main(int argc, char *argv[])
 	}
 
 	int sockfd = listen_socket(ai);
-	int new_socket_fd, status_code, fl; 
+	int connection_fd, status_code, fl; 
+
   	long content_length;	
+
 	FILE *connection = NULL, *resource = NULL;
+
 	char *path = malloc(sizeof(char) * 64); 
+
 	char buf[1024], h_buf[256], f_buf[1024];
 
-	while (1){
-		if ((new_socket_fd = accept(sockfd, ai->ai_addr, &ai->ai_addrlen)) < 0){
+	run = 1;
+
+	while (run){
+		signal(SIGINT, exit_immediatly);
+		signal(SIGTERM, exit_immediatly);
+
+		if ((connection_fd = accept(sockfd, ai->ai_addr, &ai->ai_addrlen)) < 0){
 				// error
 				exit(EXIT_FAILURE);
 		}
 
-		connection = fdopen(new_socket_fd, "r+");
+		signal(SIGINT, complete_request);
+		signal(SIGTERM, complete_request);
+
+		connection = fdopen(connection_fd, "r+");
 		resource = NULL;
 
 		fl = 1;
