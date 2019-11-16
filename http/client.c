@@ -125,7 +125,7 @@ void parse_url(request *get, char *url)
 	if (rs == NULL)
 		EXIT_ERROR("problem with url", prog);
 
-	printf("\nIn parse_url:\nrs: %s\nhn: %s", rs, hn);
+	//printf("\nIn parse_url:\nrs: %s\nhn: %s", rs, hn);
 
 	get->resource = rs;
 	get->hostname = hn;
@@ -155,7 +155,7 @@ FILE* parse_dir(char *dir, char *r){
 		//resource = r;
 	}
 
-	printf("resource: %s\n", resource);
+//	printf("resource: %s\n", resource);
 
 	if (strcmp(dir, ".") == 0)
 	{
@@ -165,7 +165,7 @@ FILE* parse_dir(char *dir, char *r){
 	}
 
 	char *path = malloc(sizeof(char) * (strlen(directory) + strlen("/") + strlen(resource) + 1));
-	
+
 	if (path == NULL)
 		exit(EXIT_FAILURE);
 
@@ -175,7 +175,9 @@ FILE* parse_dir(char *dir, char *r){
 		strcat(path, "/");
 
 	strcat(path, resource);
-
+	free(resource);
+	
+	printf("saving to: %s\n", path);
 	FILE *f = fopen(path, "w");
 	free(path);
 	return f;
@@ -232,7 +234,7 @@ int main(int argc, char *argv[])
 	parse_url(rq, url);
 
 
-	printf("\nAfter parse url:\nhn: %s\nrs: %s\n", rq->hostname, rq->resource);
+	//printf("\nAfter parse url:\nhn: %s\nrs: %s\n", rq->hostname, rq->resource);
 
 
 	struct addrinfo hints, *ai;
