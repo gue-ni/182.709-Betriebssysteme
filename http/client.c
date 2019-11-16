@@ -84,8 +84,8 @@ int check_response(char *buf){
 
 void parse_url(request *get, char *url)
 {
-	char *rs;
-	char *hn;
+	char *rs = NULL;
+	char *hn = NULL;
 	
 	if (check_protocol(url))
 	{
@@ -108,7 +108,7 @@ void parse_url(request *get, char *url)
 				exit(EXIT_FAILURE);
 
 			strncpy(hn, url, i);
-
+			
 			rs = malloc(strlen(url) - i + 1 * sizeof(char));
 
 			if (rs == NULL)
@@ -123,7 +123,7 @@ void parse_url(request *get, char *url)
 		hn = url;
 
 	if (rs == NULL)
-		EXIT_ERROR("no resource specified", prog);
+		EXIT_ERROR("problem with url", prog);
 
 	get->resource = rs;
 	get->hostname = hn;

@@ -185,7 +185,7 @@ int main(int argc, char *argv[])
 	int c;
 	char *port = "8080";
 	char *index = "index.html";
-	char *doc_root = "\x00";
+	char *doc_root = "\0";
 
 	// reads in command line arguments
 	while( (c = getopt(argc, argv, "p:i:h")) != -1 ){
