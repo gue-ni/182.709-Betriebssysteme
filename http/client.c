@@ -228,8 +228,6 @@ int main(int argc, char *argv[])
 
 	parse_url(rq, url);
 
-	printf("hn: %s\nrs: %s\n", rq->hostname, rq->resource);
-
 	struct addrinfo hints, *ai;
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_INET;
