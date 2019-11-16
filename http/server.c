@@ -2,12 +2,6 @@
 	@author: Jakob G. Maier <e11809618@student.tuwien.ac.at>
 	@date: 2019-19-24
 	@brief:
-
-	TODO:
-	add signal handling
-	signal handling should work, add clean up
-	improve memory safety
-	seg-fault if no trailing / in doc_root
 */
 
 #include "utils.h"
@@ -160,20 +154,19 @@ int parse_request(char *rq, char **path, FILE **resource)
 	if (memcmp(rq, "HTTP/1.1", 8) != 0)
 		return 400;
 	
-	//return parse_path(*path, resource); // returns either 200 or 404
 	return 0; 
 }
 
 void exit_immediatly(int num)
 {
-	write(STDOUT_FILENO, "\nexit\n", 7);
+	//write(STDOUT_FILENO, "\nexit\n", 7);
 	freeaddrinfo(ai);
 	exit(EXIT_SUCCESS);
 }
 
 void complete_request(int num)
 {
-	write(STDOUT_FILENO, "\ncomplete request\n", 18);
+	//write(STDOUT_FILENO, "\ncomplete request\n", 18);
 	run = 0;
 }
 
@@ -322,7 +315,7 @@ int main(int argc, char *argv[])
 		memset(f_buf, 0, B_BUFFER);	
 	}
 
-	freeaddrinfo(ai); // causing problems in valgrind
+	freeaddrinfo(ai); 
 	return EXIT_SUCCESS;
 }
 
