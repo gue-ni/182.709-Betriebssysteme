@@ -2,35 +2,24 @@
 
 port=8888
 host=localhost
-dir=my_website/
+dir=./my_website/
 
-./server -p $port $dir &
+./server -p $port -i test.html $dir &
 server_pid=$!
-./client -p $port -o tmp.html http://${host}/  
-diff tmp.html $dir/index.html
+./client -p $port -o received.html http://${host}/  
+diff received.html $dir/test.html
+rm received.html
+kill $server_pid || echo "error"
 
-
-
-mkdir tmp_dir/
-./client -p $port -d tmp_dir/ http://${host}/  
-diff $dir/index.html tmp_dir/index.html
-rm -rf tmp_dir/
-
-wget http://pan.vmars.tuwien.ac.at/osue/index.html
-./client http://pan.vmars.tuwien.ac.at/osue/index.html > test.html
-diff index.html test.html
-wget http://pan.vmars.tuwien.ac.at/osue/countdown.js
-mv countdown.js wget_countdown.js
+./client http://pan.vmars.tuwien.ac.at/osue/ > osue.html
+diff osue.html testing/index.html
 ./client -d . http://pan.vmars.tuwien.ac.at/osue/countdown.js
-diff countdown.js wget_countdown.js
-
-rm *.js 
+diff countdown.js testing/countdown.js
 
 
-
-
-
-
+./server -p $port ./my_website/
+server_pid=$!
+wget -p -nd http://${host}:${port}/ || echo "error with wget"
 
 kill $server_pid || echo "error"
 

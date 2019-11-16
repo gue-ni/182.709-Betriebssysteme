@@ -125,6 +125,8 @@ void parse_url(request *get, char *url)
 	if (rs == NULL)
 		EXIT_ERROR("problem with url", prog);
 
+	printf("\nIn parse_url:\nrs: %s\nhn: %s", rs, hn);
+
 	get->resource = rs;
 	get->hostname = hn;
 }
@@ -134,48 +136,49 @@ FILE* parse_dir(char *dir, char *r){
 	char *directory;
 
 	if (strcmp(r, "/") == 0)
-	{
-		resource = malloc(sizeof(char) * 11);
-
-		if (resource == NULL)
-			EXIT_ERROR("malloc failed", prog);
-
-		strcpy(resource, "/index.html");
-
+	{	
+		resource = calloc(sizeof(char) * 11, 1);
+		strcpy(resource, "index.html");
 	} else {
-		resource = malloc(sizeof(char) * strlen(r));
 
-		if (resource == NULL)
-			exit(EXIT_FAILURE);
+		resource = calloc(strlen(r) + 1, 1);
 
-		strcpy(resource, r);
+		for (int i = strlen(r)-1; i >= 0; --i)
+		{
+			if ((char) r[i] == '/')
+			{
+				++i;
+				strncpy(resource, r+i, strlen(r));
+				break;
+			}
+		}
+		//resource = r;
 	}
 
-	if ((char) dir[strlen(dir) - 1] == '/')
+	printf("resource: %s\n", resource);
+
+	if (strcmp(dir, ".") == 0)
 	{
-		directory = calloc(sizeof(char) * strlen(dir), 1);
-
-		if (directory == NULL)
-			exit(EXIT_FAILURE);
-
-		strncpy(directory, dir, strlen(dir) - 1);
+		directory = "\0";
 	} else {
-		//strcpy(directory, dir);
 		directory = dir;
 	}
 
-	char *path = malloc(sizeof(char) * (sizeof(*resource) + sizeof(*directory) - 1));
+	char *path = malloc(sizeof(char) * (strlen(directory) + strlen("/") + strlen(resource) + 1));
 	
 	if (path == NULL)
 		exit(EXIT_FAILURE);
 
-	strcat(path, directory);
+	strcpy(path, directory);
+
+	if (strlen(directory) > 0)
+		strcat(path, "/");
+
 	strcat(path, resource);
 
-	free(resource);
-	free(directory);
-
-	return fopen(path, "w");
+	FILE *f = fopen(path, "w");
+	free(path);
+	return f;
 }
 
 int main(int argc, char *argv[])
@@ -228,6 +231,10 @@ int main(int argc, char *argv[])
 
 	parse_url(rq, url);
 
+
+	printf("\nAfter parse url:\nhn: %s\nrs: %s\n", rq->hostname, rq->resource);
+
+
 	struct addrinfo hints, *ai;
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_INET;
@@ -248,7 +255,7 @@ int main(int argc, char *argv[])
 			break;
 
 		case (3):
-			fp = parse_dir(directory, rq->resource);
+			fp = parse_dir(directory, rq->resource); // causes sideeffect, resource is changed
 			break;
 
 		default:
@@ -260,6 +267,7 @@ int main(int argc, char *argv[])
 		EXIT_ERROR("Failed to open file", argv[0]);
 	}
 
+	GET(stdout, rq);
 	GET(sockfp, rq);
 	free(rq->hostname);
 	free(rq->resource);
