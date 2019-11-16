@@ -18,16 +18,15 @@
 #include <signal.h>
 
 #define B_BUFFER 1024
-#define M_BUFFER 512
 #define S_BUFFER 256
 
 int run = 1;
 struct addrinfo hints, *ai;
 char *prog;
 
-void prog_usage(char *myprog)
+void prog_usage(char *prog_name)
 {
-	fprintf(stderr, "Usage: %s [-p PORT] [-i INDEX] DOC_ROOT\n", myprog);
+	fprintf(stderr, "Usage: %s [-p PORT] [-i INDEX] DOC_ROOT\n", prog_name);
 	exit(EXIT_FAILURE);
 }
 
@@ -35,17 +34,23 @@ int listen_socket(struct addrinfo *ai)
 {
 	int socket_fd = socket(ai->ai_family, ai->ai_socktype,ai->ai_protocol);
 
-	if(socket_fd < 0) 
-		EXIT_ERROR("failure to create socket", prog);
+	if(socket_fd < 0){ 
+		freeaddrinfo(ai);
+		EXIT_ERROR("create socket failed", prog);
+	}
 
 	int optval = 1;
 	setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof optval);
 
-	if(bind(socket_fd, ai->ai_addr, ai->ai_addrlen) < 0) 
+	if(bind(socket_fd, ai->ai_addr, ai->ai_addrlen) < 0){
+		freeaddrinfo(ai);
 		EXIT_ERROR("bind socket failed", prog);
+	}
 
-	if (listen(socket_fd, 10) < 0)
+	if (listen(socket_fd, 10) < 0){
+		freeaddrinfo(ai);
 		EXIT_ERROR("listen socket failed", prog);
+	}
 
 	 return socket_fd;
 }
@@ -200,6 +205,8 @@ int main(int argc, char *argv[])
 		}
 	}
 
+//	printf("Port: %s\nIndex: %s\nDOC_ROOT: %s\n", port, index, doc_root);
+
 	prog = argv[0];
 
 	if (optind < argc)
@@ -242,23 +249,23 @@ int main(int argc, char *argv[])
 		int fl = 1;
 	   	while(fgets(h_buf, sizeof(h_buf), connection) != NULL)
 	   	{
-	   		if (fl){
-	   			memcpy(buf, h_buf, S_BUFFER); // is this correct 
+	   		if (fl){ // we only care about the first line
+	   			memcpy(buf, h_buf, S_BUFFER); 
 	   			fl = 0;
 	   		}
 
-	   		if (memcmp(h_buf, "\r\n", 2) == 0) // end of header
+	   		if (memcmp(h_buf, "\r\n", 2) == 0) // check for end of header
 	   			break;
 	   	}
 
 	   	size_t ps = 1 + strlen(buf);
 	   	char *path = calloc(ps * sizeof(char), sizeof(char)); 
 
+	   	// returns 0, 400 or 501
 	   	int status_code = parse_request(buf, &path, &resource);
-	   	if (status_code == 0)
-	   	{
+
+	   	if (status_code == 0) // request looks ok, try to open requested file
 	   		status_code = parse_path(path, &resource, index, doc_root);
-	   	}
 
 		switch(status_code){
 			case (200):
@@ -298,7 +305,7 @@ int main(int argc, char *argv[])
 		if (resource != NULL)
 			fclose(resource);
 
-		memset(buf, 0, B_BUFFER);
+		memset(buf,   0, B_BUFFER);
 		memset(h_buf, 0, S_BUFFER);
 		memset(f_buf, 0, B_BUFFER);	
 	}

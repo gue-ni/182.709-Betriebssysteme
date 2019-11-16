@@ -177,7 +177,7 @@ FILE* parse_dir(char *dir, char *r){
 	strcat(path, resource);
 	free(resource);
 	
-	printf("saving to: %s\n", path);
+//	printf("saving to: %s\n", path);
 	FILE *f = fopen(path, "w");
 	free(path);
 	return f;
@@ -233,9 +233,7 @@ int main(int argc, char *argv[])
 
 	parse_url(rq, url);
 
-
 	//printf("\nAfter parse url:\nhn: %s\nrs: %s\n", rq->hostname, rq->resource);
-
 
 	struct addrinfo hints, *ai;
 	memset(&hints, 0, sizeof hints);
@@ -265,12 +263,10 @@ int main(int argc, char *argv[])
 	}
 
 	if(fp == NULL) 
-	{
 		EXIT_ERROR("Failed to open file", argv[0]);
-	}
 
-	GET(stdout, rq);
 	GET(sockfp, rq);
+
 	free(rq->hostname);
 	free(rq->resource);
 	free(rq);
@@ -321,5 +317,3 @@ int main(int argc, char *argv[])
 
 	return EXIT_SUCCESS;
 }
-
-
