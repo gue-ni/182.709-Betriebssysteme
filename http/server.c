@@ -29,6 +29,7 @@
 
 int run = 1;
 struct addrinfo hints, *ai;
+char *prog;
 
 void prog_usage(char *myprog)
 {
@@ -41,16 +42,16 @@ int listen_socket(struct addrinfo *ai)
 	int sockfd = socket(ai->ai_family, ai->ai_socktype,ai->ai_protocol);
 
 	if(sockfd < 0) 
-		exit(EXIT_FAILURE);
+		EXIT_ERROR("failure", prog);
 
 	int optval = 1;
 	setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof optval);
 
 	if(bind(sockfd, ai->ai_addr, ai->ai_addrlen) < 0) 
-		exit(EXIT_FAILURE);
+		EXIT_ERROR("bind socket failed", prog);
 
 	if (listen(sockfd, 10) < 0)
-		exit(EXIT_FAILURE);
+		EXIT_ERROR("listen socket failed", prog);
 
 	 return sockfd;
 }
@@ -208,6 +209,9 @@ int main(int argc, char *argv[])
 				break;
 		}
 	}
+
+	prog = argv[0];
+
 	if (optind < argc)
 		doc_root = argv[optind];
 
