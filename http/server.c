@@ -33,21 +33,21 @@ void prog_usage(char *myprog)
 
 int listen_socket(struct addrinfo *ai)
 {
-	int sockfd = socket(ai->ai_family, ai->ai_socktype,ai->ai_protocol);
+	int socket_fd = socket(ai->ai_family, ai->ai_socktype,ai->ai_protocol);
 
-	if(sockfd < 0) 
-		EXIT_ERROR("failure", prog);
+	if(socket_fd < 0) 
+		EXIT_ERROR("failure to create socket", prog);
 
 	int optval = 1;
-	setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof optval);
+	setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof optval);
 
-	if(bind(sockfd, ai->ai_addr, ai->ai_addrlen) < 0) 
+	if(bind(socket_fd, ai->ai_addr, ai->ai_addrlen) < 0) 
 		EXIT_ERROR("bind socket failed", prog);
 
-	if (listen(sockfd, 10) < 0)
+	if (listen(socket_fd, 10) < 0)
 		EXIT_ERROR("listen socket failed", prog);
 
-	 return sockfd;
+	 return socket_fd;
 }
 
 void respond_error(FILE *socket, int code, char* reason_phrase)
@@ -119,7 +119,6 @@ int parse_path(char *path, FILE **resource, char *index, char *doc_root)
 
 	int status_code;
 
-//	printf("opening file %s\n", full_path);
 	if ( (*resource = fopen(full_path, "r") ) != NULL)
 	{
 		status_code = 200;
@@ -159,14 +158,12 @@ int parse_request(char *rq, char **path, FILE **resource)
 
 void exit_immediatly(int num)
 {
-	//write(STDOUT_FILENO, "\nexit\n", 7);
 	freeaddrinfo(ai);
 	exit(EXIT_SUCCESS);
 }
 
 void complete_request(int num)
 {
-	//write(STDOUT_FILENO, "\ncomplete request\n", 18);
 	run = 0;
 }
 
@@ -208,7 +205,6 @@ int main(int argc, char *argv[])
 	if (optind < argc)
 		doc_root = argv[optind];
 
-	//struct addrinfo hints, *ai;
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
@@ -217,26 +213,23 @@ int main(int argc, char *argv[])
 	int res = getaddrinfo(NULL, port, &hints, &ai);
 	if(res != 0) 
 	{
-		fprintf(stderr, "%s\n", "error");
+		EXIT_ERROR("problem with getaddrinfo", prog);	
 	}
 
-	int sockfd = listen_socket(ai);
-
-	int connection_fd, status_code, fl; 
-
-  	long content_length;	
+	int socket_fd = listen_socket(ai);
+	int connection_fd; 
 
 	FILE *connection = NULL, *resource = NULL;
 
-	char buf[B_BUFFER], h_buf[S_BUFFER], f_buf[B_BUFFER];
+  	long content_length;	
 
-	
+	char buf[B_BUFFER], h_buf[S_BUFFER], f_buf[B_BUFFER];
 
 	while (run){
 		signal(SIGINT, exit_immediatly);
 		signal(SIGTERM, exit_immediatly);
 
-		if ((connection_fd = accept(sockfd, ai->ai_addr, &ai->ai_addrlen)) < 0){
+		if ((connection_fd = accept(socket_fd, ai->ai_addr, &ai->ai_addrlen)) < 0){
 				exit(EXIT_FAILURE);
 		}
 
@@ -246,7 +239,7 @@ int main(int argc, char *argv[])
 		connection = fdopen(connection_fd, "r+");
 		resource = NULL;
 
-		fl = 1;
+		int fl = 1;
 	   	while(fgets(h_buf, sizeof(h_buf), connection) != NULL)
 	   	{
 	   		if (fl){
@@ -260,9 +253,8 @@ int main(int argc, char *argv[])
 
 	   	size_t ps = 1 + strlen(buf);
 	   	char *path = calloc(ps * sizeof(char), sizeof(char)); 
-//	   	memset(path, 0, ps);
 
-	   	status_code = parse_request(buf, &path, &resource);
+	   	int status_code = parse_request(buf, &path, &resource);
 	   	if (status_code == 0)
 	   	{
 	   		status_code = parse_path(path, &resource, index, doc_root);
@@ -273,7 +265,6 @@ int main(int argc, char *argv[])
 				content_length = get_file_size(resource);				
 
 				respond_ok(connection, content_length);
-				respond_ok(stderr, content_length); // TODO remove
 
 				while(fgets(f_buf, sizeof(f_buf), resource) != NULL)
 				{
@@ -284,17 +275,14 @@ int main(int argc, char *argv[])
 				break;
 
 			case (400):
-				respond_error(stderr, status_code, "Bad Request");  // TODO remove
 				respond_error(connection, status_code, "Bad Request");
 				break;
 
 			case (404):
-				respond_error(stderr, status_code, "Not found"); // TODO remove
 				respond_error(connection, status_code, "Not found");
 				break;
 
 			case (501):
-				respond_error(stderr, status_code, "Not implemented"); // TODO remove
 				respond_error(connection, status_code, "Not implemented");
 				break;
 

@@ -196,33 +196,31 @@ int main(int argc, char *argv[])
 
 			case 'o':
 				outfile = optarg;
-				out_opt = 2;
+				out_opt += 1;
 				break;
 
 			case 'd':
 				directory = optarg;
-				out_opt = 3;
+				out_opt += 2;
 				break;
 
 			case 'h':
 				prog_usage(argv[0]);
-				exit(EXIT_FAILURE);
 				break;
 
 			default:
 				prog_usage(argv[0]);
-				exit(EXIT_FAILURE);
 				break;
 		}
 	}
 	prog = argv[0];
 	url = argv[optind];
 
-	if (url == NULL)
-	{	
+	if (out_opt > 3)
 		prog_usage(argv[0]);
-		exit(EXIT_FAILURE);
-	}
+
+	if (url == NULL)
+		prog_usage(argv[0]);
 
 	request *rq = malloc(sizeof(request));
 	if (rq == NULL)
