@@ -1,4 +1,4 @@
-1#	@author: Jakob G. Maier <e11809618@student.tuwien.ac.at>
+#	@author: Jakob G. Maier <e11809618@student.tuwien.ac.at>
 #	@date: 2019-19-24
 #	@brief: Makefile for server and client
 
@@ -8,7 +8,7 @@ CC = gcc
 DEFS = -D_DEFAULT_SOURCE -D_POSIX_C_SOURCE=200809L
 CFLAGS = -Wall -g -std=c99 -pedantic $(DEFS)
 
-PROGS = client server
+PROGS = client server test
 DEPS = utils
 
 .PHONY: all clean

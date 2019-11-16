@@ -7,6 +7,7 @@
 	add signal handling
 	signal handling should work, add clean up
 	improve memory safety
+	seg-fault if no trailing / in doc_root
 */
 
 #include "utils.h"
@@ -18,13 +19,16 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
-#include <fcntl.h>
-#include <errno.h>
 #include <assert.h>
 #include <time.h>
 #include <signal.h>
 
-int run;
+#define B_BUFFER 1024
+#define M_BUFFER 512
+#define S_BUFFER 256
+
+int run = 1;
+struct addrinfo hints, *ai;
 
 void prog_usage(char *myprog)
 {
@@ -53,7 +57,9 @@ int listen_socket(struct addrinfo *ai)
 
 void respond_error(FILE *socket, int code, char* reason_phrase)
 {
-	fprintf(socket, "HTTP/1.1 %d %s\r\n", code, reason_phrase);
+	fprintf(socket, "HTTP/1.1 %d %s\r"
+					"\n\r\n", 
+					code, reason_phrase);
 	fflush(socket);
 }
 
@@ -66,91 +72,72 @@ long get_file_size(FILE *f)
 	return size;
 }
 
-void rfc822_time(char *time_buf)
+size_t rfc822_time(char *buf, size_t size)
 {
 	time_t t;
 	time(&t);
-	struct tm *info;
-	info = gmtime(&t);
-	strftime(time_buf, sizeof(time_buf),"%a, %d %b %g %T GMT", info);
+	struct tm *info = gmtime(&t);
+	return strftime(buf, size,"%a, %d %b %g %T GMT", info);
 }
 
 void respond_ok(FILE *socket, int content_length)
 {
 	char time_buf[30] = {0};
-	
-	time_t t;
-	time(&t);
-	struct tm *info;
-	info = gmtime(&t);
-	strftime(time_buf, sizeof(time_buf),"%a, %d %b %g %T GMT", info);
-	
-	// why doesn't this work?
-	//rfc822_time(time_buf);
+	rfc822_time(time_buf, 30);
+
+	int code = 200;
+	char *reason_phrase = "OK";
 
 	fprintf(socket, 
-			"HTTP/1.1 200 OK\r\n"
+			"HTTP/1.1 %d %s\r\n"
 			"Date: %s\r\n"
 			"Content-Length: %d\r\n"
 			"Connection: close\r\n"
-			"\r\n"
-			,time_buf ,content_length);
+			"\r\n",
+			code, reason_phrase, time_buf ,content_length);
 	fflush(socket);
 }
 
 int parse_path(char *path, FILE **resource, char *index, char *doc_root)
 {
-	// TODO prepend dir
-	// TODO / == index.html
-	// TODO fix buffer overflow
-//	printf("Parsing path!\n"); 
-
 	char *file_path;
-	char *full_path;
 
-	if (doc_root[strlen(doc_root) - 1] != '/')
-	{
-		printf("does not end with /: %s, %c\n", doc_root, doc_root[strlen(doc_root) - 1]);
-		char *tmp = malloc(sizeof(*doc_root) + 1);
-		strcpy(tmp, doc_root);
-		strcat(tmp, "/");
-		doc_root = tmp;
-	}
-	
-	if (memcmp(path, "\000", 1) == 0){
+	if (doc_root[strlen(doc_root) - 1] == '/')
+		doc_root[strlen(doc_root) - 1] = '\0';
+
+	if (memcmp(path, "\0", 1) == 0){
 		file_path = index;
-
 	} else {
 		file_path = path;
 	}
-	full_path = malloc(sizeof(char) * (sizeof(doc_root) + sizeof(file_path)));
-	if (full_path == NULL)
-	{
-		exit(EXIT_FAILURE);
-	}
 
-	memset(full_path, 0, sizeof(*full_path));
-	strcat(full_path, doc_root);
+	size_t fp_size = strlen(doc_root) + strlen("/") + strlen(file_path) + 1; // one for \0 byte
+
+	char *full_path = calloc(fp_size * sizeof(char), 1);
+
+	strcpy(full_path, doc_root);
+
+	if (strlen(doc_root) > 0) // current dir could be doc_root
+		strcat(full_path, "/");
+
 	strcat(full_path, file_path);
 
-	free(doc_root);
+	int status_code;
 
-	printf("Opening file: %s\n", full_path);
+//	printf("opening file %s\n", full_path);
 	if ( (*resource = fopen(full_path, "r") ) != NULL)
 	{
-		free(full_path);
-		return 200;
+		status_code = 200;
 	} else {
-		free(full_path);
-		return 404;
+		status_code = 404;
 	}
+
+	free(full_path);
+	return status_code;
 }
 
 int parse_request(char *rq, char **path, FILE **resource)
 {
-//	printf("Parsing Request!\n");
-
-	// request type not implemented
 	if (memcmp(rq, "GET", 3) != 0){
 		return 501;
 	}
@@ -179,6 +166,7 @@ int parse_request(char *rq, char **path, FILE **resource)
 void exit_immediatly(int num)
 {
 	write(STDOUT_FILENO, "\nexit\n", 7);
+	freeaddrinfo(ai);
 	exit(EXIT_SUCCESS);
 }
 
@@ -196,7 +184,7 @@ int main(int argc, char *argv[])
 	int c;
 	char *port = "8080";
 	char *index = "index.html";
-	char *doc_root = "";
+	char *doc_root = "\x00";
 
 	// reads in command line arguments
 	while( (c = getopt(argc, argv, "p:i:h")) != -1 ){
@@ -223,7 +211,7 @@ int main(int argc, char *argv[])
 	if (optind < argc)
 		doc_root = argv[optind];
 
-	struct addrinfo hints, *ai;
+	//struct addrinfo hints, *ai;
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
@@ -236,24 +224,22 @@ int main(int argc, char *argv[])
 	}
 
 	int sockfd = listen_socket(ai);
+
 	int connection_fd, status_code, fl; 
 
   	long content_length;	
 
 	FILE *connection = NULL, *resource = NULL;
 
-	char *path = malloc(sizeof(char) * 64); 
+	char buf[B_BUFFER], h_buf[S_BUFFER], f_buf[B_BUFFER];
 
-	char buf[1024], h_buf[256], f_buf[1024];
-
-	run = 1;
+	
 
 	while (run){
 		signal(SIGINT, exit_immediatly);
 		signal(SIGTERM, exit_immediatly);
 
 		if ((connection_fd = accept(sockfd, ai->ai_addr, &ai->ai_addrlen)) < 0){
-				// error
 				exit(EXIT_FAILURE);
 		}
 
@@ -266,16 +252,18 @@ int main(int argc, char *argv[])
 		fl = 1;
 	   	while(fgets(h_buf, sizeof(h_buf), connection) != NULL)
 	   	{
-//	   		fprintf(stderr, "%s", h_buf);
-
 	   		if (fl){
-	   			memcpy(buf, h_buf, sizeof(h_buf)); // is this correct 
+	   			memcpy(buf, h_buf, S_BUFFER); // is this correct 
 	   			fl = 0;
 	   		}
 
 	   		if (memcmp(h_buf, "\r\n", 2) == 0) // end of header
 	   			break;
 	   	}
+
+	   	size_t ps = 1 + strlen(buf);
+	   	char *path = calloc(ps * sizeof(char), sizeof(char)); 
+//	   	memset(path, 0, ps);
 
 	   	status_code = parse_request(buf, &path, &resource);
 	   	if (status_code == 0)
@@ -293,8 +281,7 @@ int main(int argc, char *argv[])
 				while(fgets(f_buf, sizeof(f_buf), resource) != NULL)
 				{
 					fputs(f_buf, connection);
-//					fputs(f_buf, stdout); // TODO remove
-					memset(f_buf, 0, sizeof(f_buf));
+					memset(f_buf, 0, B_BUFFER);
 				}
 				fflush(connection);
 				break;
@@ -320,20 +307,18 @@ int main(int argc, char *argv[])
 		}
 
 		fclose(connection);
+
+		free(path);
+
 		if (resource != NULL)
 			fclose(resource);
 
-		memset(buf, 0, sizeof(buf));
-		memset(h_buf, 0, sizeof(h_buf));
-		memset(f_buf, 0, sizeof(f_buf));	
-		memset(path, 0, sizeof(*path));
-
-//		printf("\n########################################\n");			
+		memset(buf, 0, B_BUFFER);
+		memset(h_buf, 0, S_BUFFER);
+		memset(f_buf, 0, B_BUFFER);	
 	}
 
-	freeaddrinfo(ai);
-	free(path);
-
+	freeaddrinfo(ai); // causing problems in valgrind
 	return EXIT_SUCCESS;
 }
 

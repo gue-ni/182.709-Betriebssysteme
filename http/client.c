@@ -17,6 +17,8 @@
 #include <errno.h>
 #include <assert.h>
 
+char *prog;
+
 void prog_usage(char *myprog)
 {
 	fprintf(stderr, "Usage: %s [-p PORT] [ -o FILE | -d DIR ] URL\n", myprog);
@@ -34,11 +36,13 @@ void GET(FILE *socket, request *rq)
 {
 	fprintf(socket, "GET %s HTTP/1.1\r\n"
 					"Host: %s\r\n"
-					"Connection: close\r\n\r\n", rq->resource, rq->hostname);
+					"Connection: close\r\n"
+					"\r\n", rq->resource, rq->hostname);
 	fflush(socket);
 }
 
 int check_protocol(char *url){
+
 	return memcmp(url, "http://", 7);
 }
 
@@ -47,14 +51,12 @@ FILE* create_socket(struct addrinfo *ai)
 	int sockfd = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
 	if (sockfd < 0)
 	{
-		printf("Failed to open socket\n");
-		exit(EXIT_FAILURE);
+		EXIT_ERROR("Failed to open socket", prog);
 	}
 
 	if ((connect(sockfd, ai->ai_addr, ai->ai_addrlen)) < 0)
 	{
-		printf("Failed to connect\n");
-		exit(EXIT_FAILURE);
+		EXIT_ERROR("Failed to connect", prog);
 	}
 
 	return fdopen(sockfd, "r+");
@@ -65,8 +67,6 @@ int check_response(char *buf){
 		
 	if (memcmp(buf, "HTTP/1.", 7) != 0) // TODO change this to 1.1
 	{
-
-		//printf("Protocol error!\n");
 		return 0;
 	} else {
 		buf += 8;
@@ -84,13 +84,12 @@ int check_response(char *buf){
 
 void parse_url(request *get, char *url)
 {
-	char *rs = "/";
+	char *rs;
 	char *hn;
 	
 	if (check_protocol(url))
 	{
-		printf("Does not start with http://\n");
-		exit(EXIT_FAILURE);
+		EXIT_ERROR("Does not start with http://", prog);
 	}
 
 	url += 7; // remove http://
@@ -103,18 +102,17 @@ void parse_url(request *get, char *url)
 		if ( c == '/' || c == '&' || c == ';' ||  c == '?' 
 			          || c == ':' || c == '@' || c == '&' ){
 
-			// maybe call free?
-			hn = malloc(i * sizeof(char));
+			hn = malloc((i + 1) * sizeof(char)); // leave space for null byte
 		
 			if (hn == NULL)
 				exit(EXIT_FAILURE);
 
 			strncpy(hn, url, i);
 
-			rs = malloc(strlen(url) - i * sizeof(char));
+			rs = malloc(strlen(url) - i + 1 * sizeof(char));
 
 			if (rs == NULL)
-				exit(EXIT_FAILURE);
+				EXIT_ERROR("malloc failed", prog);
 
 			strcpy(rs, url += i);
 			break;
@@ -124,12 +122,11 @@ void parse_url(request *get, char *url)
 	if (hn == NULL)
 		hn = url;
 
+	if (rs == NULL)
+		EXIT_ERROR("no resource specified", prog);
+
 	get->resource = rs;
 	get->hostname = hn;
-
-	//free(hn);  // this does not work. why???
-	//free(rs);
-
 }
 
 FILE* parse_dir(char *dir, char *r){
@@ -141,7 +138,7 @@ FILE* parse_dir(char *dir, char *r){
 		resource = malloc(sizeof(char) * 11);
 
 		if (resource == NULL)
-			exit(EXIT_FAILURE);
+			EXIT_ERROR("malloc failed", prog);
 
 		strcpy(resource, "/index.html");
 
@@ -154,24 +151,20 @@ FILE* parse_dir(char *dir, char *r){
 		strcpy(resource, r);
 	}
 
-	directory = malloc(sizeof(char) * strlen(dir));
-
-	if (directory == NULL)
-		exit(EXIT_FAILURE);
-
 	if ((char) dir[strlen(dir) - 1] == '/')
 	{
-		directory = malloc(sizeof(char) * strlen(dir) - 1);
+		directory = calloc(sizeof(char) * strlen(dir), 1);
 
 		if (directory == NULL)
 			exit(EXIT_FAILURE);
 
 		strncpy(directory, dir, strlen(dir) - 1);
 	} else {
-		strcpy(directory, dir);
+		//strcpy(directory, dir);
+		directory = dir;
 	}
 
-	char *path = malloc(sizeof(char) * (strlen(resource) + strlen(directory)));
+	char *path = malloc(sizeof(char) * (sizeof(*resource) + sizeof(*directory) - 1));
 	
 	if (path == NULL)
 		exit(EXIT_FAILURE);
@@ -222,7 +215,7 @@ int main(int argc, char *argv[])
 				break;
 		}
 	}
-
+	prog = argv[0];
 	url = argv[optind];
 
 	if (url == NULL)
@@ -237,6 +230,8 @@ int main(int argc, char *argv[])
 
 	parse_url(rq, url);
 
+	printf("hn: %s\nrs: %s\n", rq->hostname, rq->resource);
+
 	struct addrinfo hints, *ai;
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_INET;
@@ -246,7 +241,7 @@ int main(int argc, char *argv[])
 
 	FILE *fp, *sockfp = create_socket(ai);
 
-	// chose output option
+	// chose output opt3ion
 	switch ( out_opt ){
 		case (1):
 			fp = fdopen(out_opt, "w"); // stdout
@@ -266,11 +261,12 @@ int main(int argc, char *argv[])
 
 	if(fp == NULL) 
 	{
-		fprintf(stderr, "fopen failed: %s\n", strerror(errno));
-		exit(EXIT_FAILURE);
+		EXIT_ERROR("Failed to open file", argv[0]);
 	}
 
 	GET(sockfp, rq);
+	free(rq->hostname);
+	free(rq->resource);
 	free(rq);
 	fflush(sockfp);
     
@@ -281,16 +277,15 @@ int main(int argc, char *argv[])
 
     	if (fl)
     	{
-//    		fputs(buf, fp); // TODO remove
     		status_code = check_response(buf);
 
     		if ( status_code == 0) 
     		{
-    			fprintf(stderr, "Protocol error!\n");
+    			fprintf(stderr, "%s Protocol error!\n", argv[0]);
     			exit(2);
 
     		} else if (status_code != 200){
-	    		fprintf(stderr, "%s", buf+9);
+	    		fprintf(stderr, "%s ERROR %s", argv[0], buf+9);
 	    		exit(3);
 
     		} else {
@@ -301,7 +296,6 @@ int main(int argc, char *argv[])
 
     	if (header)
     	{
- //   		fputs(buf, fp); // TODO remove
     		if (memcmp(buf, "\r\n", 2) == 0) // check for end of header
     		{
     			header = 0;
@@ -315,6 +309,7 @@ int main(int argc, char *argv[])
 		memset(buf, 0, sizeof(buf));
     } 
 
+   	freeaddrinfo(ai);
     fclose(sockfp);
     fclose(fp);
 

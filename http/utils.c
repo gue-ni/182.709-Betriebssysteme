@@ -10,26 +10,16 @@
 #include <fcntl.h>
 #include <errno.h>
 
-
-
-
-
-
-
-
-
-
-void RESPONSE_HEADER(FILE *socket, response_header *rsp){
-	fprintf(socket, 
-		"HTTP/1.1 %d %s\r\n" 
-		"Date: %s\r\n"
-		"Content-Length: %d\r\n"
-		"Connection: close\r\n"
-		"\r\n", 
-		rsp->http_err_code, rsp->http_err, rsp->date, rsp->content_len);
-	fflush(socket);
-
+void EXIT_ERROR(char *error, char *prog)
+{
+	fprintf(stderr, "%s: ERROR: %s\n", prog, error);
+	exit(EXIT_FAILURE);
 }
+
+
+
+
+
 
 
 
