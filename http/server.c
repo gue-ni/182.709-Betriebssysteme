@@ -1,7 +1,7 @@
 /*
 	@author: Jakob G. Maier <e11809618@student.tuwien.ac.at>
-	@date: 2019-19-24
-	@brief:
+	@date: 2019-11-17 
+	@brief: A simple http server
 */
 
 #include "utils.h"
@@ -204,8 +204,6 @@ int main(int argc, char *argv[])
 				break;
 		}
 	}
-
-//	printf("Port: %s\nIndex: %s\nDOC_ROOT: %s\n", port, index, doc_root);
 
 	prog = argv[0];
 

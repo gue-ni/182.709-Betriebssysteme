@@ -1,7 +1,7 @@
 /*
 	@author: Jakob G. Maier <e11809618@student.tuwien.ac.at>
-	@date: 2019-19-24
-	@brief:
+	@date: 2019-11-17 
+	@brief: A simple http client
 */
 
 #include "utils.h"

@@ -1,11 +1,11 @@
 #	@author: Jakob G. Maier <e11809618@student.tuwien.ac.at>
-#	@date: 2019-19-24
+#	@date: 2019-11-17
 #	@brief: Makefile for server and client
 
 CC = gcc
 # FÜR DIE ABGABE:
-#DEFS = -D_BSD_SOURCE -D_SVID_SOURCE -D_POSIX_C_SOURCE=200809L
-DEFS = -D_DEFAULT_SOURCE -D_POSIX_C_SOURCE=200809L
+DEFS = -D_BSD_SOURCE -D_SVID_SOURCE -D_POSIX_C_SOURCE=200809L
+#DEFS = -D_DEFAULT_SOURCE -D_POSIX_C_SOURCE=200809L
 CFLAGS = -Wall -g -std=c99 -pedantic $(DEFS)
 
 PROGS = client server 

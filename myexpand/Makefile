@@ -1,10 +1,9 @@
 #	@author: Jakob G. Maier <e11809618@student.tuwien.ac.at>
-#	@date: 2019-19-24
-#	@brief:
+#	@date: 2019-11-17
+#	@brief: Makefile for 
 
 CC = gcc
-# DEFS = -D_BSD_SOURCE -D_SVID_SOURCE -D_POSIX_C_SOURCE=200809L
-DEFS = -D_DEFAULT_SOURCE -D_POSIX_C_SOURCE=200809L
+DEFS = -D_BSD_SOURCE -D_SVID_SOURCE -D_POSIX_C_SOURCE=200809L
 CFLAGS = -Wall -g -std=c99 -pedantic $(DEFS)
 
 OBJECTS = main.o

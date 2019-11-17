@@ -1,7 +1,7 @@
 /*
 	@author: Jakob G. Maier <e11809618@student.tuwien.ac.at>
-	@date: 2019-19-24
-	@brief:
+	@date: 22019-11-17 
+	@brief: A simple program to expand \t to spaces
 */
 #include <stdio.h>
 #include <stdlib.h>
@@ -68,34 +68,6 @@ int main(int argc, char *argv[])
 	// opens filename if exists, otherwise STDIN or STDOUT
 	out_fp = opn_str(outfile, STDOUT_FILENO, "w");
 	in_fp = opn_str(inputfile, STDIN_FILENO, "r");
-
-	/*	
-	if (outfile)
-	{
-		out_fp = fopen(outfile, "w");
-
-		if (!out_fp)
-		{
-			return EXIT_FAILURE;
-		}
-
-	} else {
-		out_fp = fdopen(STDOUT_FILENO, "w");
-	}
-
-	if (inputfile)
-	{
-		in_fp = fopen(inputfile, "r");
-
-		if (!in_fp)
-		{
-			return EXIT_FAILURE;
-		}
-
-	} else {
-		in_fp = fdopen(STDIN_FILENO, "r");
-	}
-	*/
 
 	int next_c;
 
