@@ -1,8 +1,8 @@
 /*
-	@author: Jakob G. Maier <e11809618@student.tuwien.ac.at>
-	@date: 2019-11-17 
-	@brief: A simple http client
-*/
+   @author: Jakob G. Maier <e11809618@student.tuwien.ac.at>
+   @date: 2019-11-17 
+   @brief: A simple http client
+ */
 
 #include "utils.h"
 #include <stdio.h>
@@ -28,16 +28,16 @@ void prog_usage(char *myprog)
 void POST(FILE *socket, request *rq)
 {
 	fprintf(socket, "POST %s HTTP/1.1\r\n"
-					, rq->resource);
+			, rq->resource);
 	fflush(socket);
 }
 
 void GET(FILE *socket, request *rq)
 {
 	fprintf(socket, "GET %s HTTP/1.1\r\n"
-					"Host: %s\r\n"
-					"Connection: close\r\n"
-					"\r\n", rq->resource, rq->hostname);
+			"Host: %s\r\n"
+			"Connection: close\r\n"
+			"\r\n", rq->resource, rq->hostname);
 	fflush(socket);
 }
 
@@ -49,13 +49,11 @@ int check_protocol(char *url){
 FILE* create_socket(struct addrinfo *ai)
 {
 	int sockfd = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
-	if (sockfd < 0)
-	{
+	if (sockfd < 0){
 		EXIT_ERROR("Failed to open socket", prog);
 	}
 
-	if ((connect(sockfd, ai->ai_addr, ai->ai_addrlen)) < 0)
-	{
+	if ((connect(sockfd, ai->ai_addr, ai->ai_addrlen)) < 0){
 		EXIT_ERROR("Failed to connect", prog);
 	}
 
@@ -64,18 +62,16 @@ FILE* create_socket(struct addrinfo *ai)
 
 // returns 0 if it does not start with HTTP/1.1, else HTTP code
 int check_response(char *buf){
-		
-	if (memcmp(buf, "HTTP/1.", 7) != 0) // TODO change this to 1.1
-	{
+
+	if (memcmp(buf, "HTTP/1.", 7) != 0) {
 		return 0;
 	} else {
 		buf += 8;
 	}
 
 	int status_code = strtol(buf, NULL, 10);
-	
-	if (status_code < 600 && status_code >= 100)
-	{
+
+	if (status_code < 600 && status_code >= 100){
 		return status_code;
 	} else {
 		return 0;
@@ -86,29 +82,27 @@ void parse_url(request *get, char *url)
 {
 	char *rs = NULL;
 	char *hn = NULL;
-	
-	if (check_protocol(url))
-	{
+
+	if (check_protocol(url)){
 		EXIT_ERROR("Does not start with http://", prog);
 	}
 
 	url += 7; // remove http://
 
 	int c;
-	for (int i = 0; i < strlen(url); ++i)
-	{
+	for (int i = 0; i < strlen(url); ++i){
 		c = url[i];
 
 		if ( c == '/' || c == '&' || c == ';' ||  c == '?' 
-			          || c == ':' || c == '@' || c == '&' ){
+				|| c == ':' || c == '@' || c == '&' ){
 
 			hn = malloc((i + 1) * sizeof(char)); // leave space for null byte
-		
+
 			if (hn == NULL)
 				exit(EXIT_FAILURE);
 
 			strncpy(hn, url, i);
-			
+
 			rs = malloc(strlen(url) - i + 1 * sizeof(char));
 
 			if (rs == NULL)
@@ -125,8 +119,6 @@ void parse_url(request *get, char *url)
 	if (rs == NULL)
 		EXIT_ERROR("problem with url", prog);
 
-	//printf("\nIn parse_url:\nrs: %s\nhn: %s", rs, hn);
-
 	get->resource = rs;
 	get->hostname = hn;
 }
@@ -135,18 +127,15 @@ FILE* parse_dir(char *dir, char *r){
 	char *resource;
 	char *directory;
 
-	if (strcmp(r, "/") == 0)
-	{	
+	if (strcmp(r, "/") == 0){	
 		resource = calloc(sizeof(char) * 11, 1);
 		strcpy(resource, "index.html");
 	} else {
 
 		resource = calloc(strlen(r) + 1, 1);
 
-		for (int i = strlen(r)-1; i >= 0; --i)
-		{
-			if ((char) r[i] == '/')
-			{
+		for (int i = strlen(r)-1; i >= 0; --i){
+			if ((char) r[i] == '/'){
 				++i;
 				strncpy(resource, r+i, strlen(r));
 				break;
@@ -155,10 +144,9 @@ FILE* parse_dir(char *dir, char *r){
 		//resource = r;
 	}
 
-//	printf("resource: %s\n", resource);
+	//	printf("resource: %s\n", resource);
 
-	if (strcmp(dir, ".") == 0)
-	{
+	if (strcmp(dir, ".") == 0){
 		directory = "\0";
 	} else {
 		directory = dir;
@@ -176,8 +164,8 @@ FILE* parse_dir(char *dir, char *r){
 
 	strcat(path, resource);
 	free(resource);
-	
-//	printf("saving to: %s\n", path);
+
+	//	printf("saving to: %s\n", path);
 	FILE *f = fopen(path, "w");
 	free(path);
 	return f;
@@ -186,8 +174,7 @@ FILE* parse_dir(char *dir, char *r){
 int main(int argc, char *argv[])
 {
 	int c, out_opt = 1;
-
-	char *port = "80";
+	char *port = "8080";
 	char *outfile = NULL;
 	char *directory = NULL;
 	char *url = NULL;
@@ -271,49 +258,45 @@ int main(int argc, char *argv[])
 	free(rq->resource);
 	free(rq);
 	fflush(sockfp);
-    
+
 	char buf[1024];
 	int fl = 1, header = 1, status_code;
 
-    while (fgets(buf, sizeof(buf), sockfp) != NULL){
+	while (fgets(buf, sizeof(buf), sockfp) != NULL){
 
-    	if (fl)
-    	{
-    		status_code = check_response(buf);
+		if (fl){
+			status_code = check_response(buf);
 
-    		if ( status_code == 0) 
-    		{
-    			fprintf(stderr, "%s Protocol error!\n", argv[0]);
-    			exit(2);
+			if ( status_code == 0) {
+				fprintf(stderr, "%s Protocol error!\n", argv[0]);
+				exit(2);
 
-    		} else if (status_code != 200){
-	    		fprintf(stderr, "%s ERROR %s", argv[0], buf+9);
-	    		exit(3);
+			} else if (status_code != 200){
+				fprintf(stderr, "%s ERROR %s", argv[0], buf+9);
+				exit(3);
 
-    		} else {
-    			fl = 0;
-    			continue;
-    		}
-    	}
+			} else {
+				fl = 0;
+				continue;
+			}
+		}
 
-    	if (header)
-    	{
-    		if (memcmp(buf, "\r\n", 2) == 0) // check for end of header
-    		{
-    			header = 0;
-    			continue;
-    		} else {
-    			continue;
-    		}
-    	}
+		if (header){
+			if (memcmp(buf, "\r\n", 2) == 0){
+				header = 0;
+				continue;
+			} else {
+				continue;
+			}
+		}
 
 		fputs(buf, fp);
 		memset(buf, 0, sizeof(buf));
-    } 
+	} 
 
-   	freeaddrinfo(ai);
-    fclose(sockfp);
-    fclose(fp);
+	freeaddrinfo(ai);
+	fclose(sockfp);
+	fclose(fp);
 
 	return EXIT_SUCCESS;
 }
