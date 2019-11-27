@@ -3,6 +3,7 @@ myexpand
 *.txt
 *.pdf
 !myexpand_td.pdf
+!http.pdf
 test.c
 test
 exercise1-examples/
