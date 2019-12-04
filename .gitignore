@@ -8,6 +8,8 @@
 *.jpg
 *.html
 *.sh
+*.txt
+*.pdf
 
 forkFFT
 myexpand
