@@ -1,3 +1,4 @@
+# Files
 *.tgz
 *.o
 *.txt
@@ -9,8 +10,10 @@
 *.html
 *.sh
 *.txt
-*.pdf
 
+!*.pdf
+
+# Directories
 exercise1-examples/
 exam1/
 
