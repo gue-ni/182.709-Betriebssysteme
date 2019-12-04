@@ -11,11 +11,6 @@
 *.txt
 *.pdf
 
-forkFFT
-myexpand
-server
-client
-
 exercise1-examples/
 exam1/
 test/
