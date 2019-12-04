@@ -13,6 +13,8 @@
 int main(int argc, char *argv[])
 {
 	char buf[10]; 
+
+
 	float value;
 
 	int pid1 = 0, pid2 = 0, n = 0;
