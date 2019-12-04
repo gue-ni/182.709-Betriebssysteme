@@ -12,83 +12,58 @@
 
 int main(int argc, char *argv[])
 {
-	char buf[BUFSIZE];
-	int n = 0;
- 	float *array, value;
-	size_t size = INITIAL_SIZE;
+	char buf[10]; 
+	float value;
 
-	array = malloc(sizeof(float) * INITIAL_SIZE);
-	
-	while (fgets(buf, sizeof(buf), stdin) != NULL){
-		value = strtof(buf, NULL);
-		array[n++] = value;
+	int pid1 = 0, pid2 = 0, n = 0;
 
-//		fprintf(stderr, "read: %f\n", array[n - 1]);
-		
-		if ( n > size - 2){
-//			fprintf(stderr, "increasing size...\n");
-			size += INITIAL_SIZE;
-			array = realloc(array, size);
-		}
-	}
-	
-	fprintf(stderr, "n: %d, size: %ld\n", n, size);
-	if ( n == 1 ){
-		fprintf(stdout, "%f\n", array[0]);
-		free(array);
-		return EXIT_SUCCESS;
-	}
+	int pipefd1_c1[2];
+	int pipefd2_c1[2];
+//	int pipeo_c2[2];
+//	int pipei_c2[2];
 
-	if (n % 2 != 0)
-		return EXIT_FAILURE;
-
-	float *pe, *po;
-	pe = malloc(sizeof(float) * n/2);
-	po = malloc(sizeof(float) * n/2);
-
-	for (int i = 0; i < n/2; i++){
-		pe[i] = array[2 * i];
-		po[i] = array[2 * i + 1];	
-	}
-
-	int pid1 = 0, pid2 = 0;
-	int pipefd_1[2], pipefd_2[2];
-	
-	if(pipe(pipefd_1) == -1 || pipe(pipefd_2) == -1){
-		fprintf("unabele to create pipe\n");
+	if(pipe(pipefd1_c1) == -1 || pipe(pipefd2_c1) == -1){
+		fprintf(stderr, "unabele to create pipe\n");
 	}
 
 	// create two child processes
 	pid1 = fork();
 
-	if (pid1 != 0)
-		pid2 = fork();
+//	if (pid1 != 0)
+//		pid2 = fork();
 
-	if ( (pid1 != 0) && (pid2 != 0) ){
+	if ( (pid1 != 0)){
 		// parent
-
 		printf("I'm parent of process %d and %d\n", pid1, pid2);
-		
+		while (fgets(buf, sizeof(buf), stdin) != NULL){
+			value = strtof(buf, NULL);
+			write(pipefd1_c1[1], &value, sizeof(float));
 
-	} else if ( pid1 + pid2 > 0 ){
+
+
+
+		}
+	
+
+//	} else if ( pid1 + pid2 > 0 ){
 		// child 1
-		//execlp("./forkFFT", "./forkFFT", (char *) 0);
-
-
-
-
-
 	}else{
 		// child 2
-		close(pipefd[1]);
-		dup2(pipefd[0], STDIN_FILENO);
+		dup2(pipefd1_c1[0], STDIN_FILENO);
+		dup2(pipefd2_c1[1], STDOUT_FILENO);
+		
+		float fbuf;
+	
+		read(STDIN_FILENO, &fbuf, sizeof(float));
+		fprintf(stderr, "child read: %f\n", fbuf);
+
+		
+		
 		
 	}
 
 
-	free(array);
-	free(pe);
-	free(po);
+
 
 	return 0;
 }
