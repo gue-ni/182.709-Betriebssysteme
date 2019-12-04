@@ -1,5 +1,20 @@
-!Makefile
-!*.c
-!*.h
-*
+*.tgz
+*.o
+*.txt
+*.js
+*.css
+*.gif
+*.jpeg
+*.jpg
+*.html
+*.sh
+
+forkFFT
+myexpand
+server
+client
+
+exercise1-examples/
+exam1/
+test/
 
