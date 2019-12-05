@@ -56,8 +56,9 @@ int main(int argc, char *argv[])
 		}
 
 		if ( n % 2 != 0){ // write on every second read
-			write(pe[1], fbuf, sizeof(float));
-			write(po[1], fbuf+sizeof(float), sizeof(float));
+			write(pe[1], &value, sizeof(float)); // TODO change
+			write(po[1], &value, sizeof(float));
+			
 		}
 
 
@@ -70,24 +71,37 @@ int main(int argc, char *argv[])
 
 			if ( (pid1 != 0) && (pid2 == 0) ){ // child 1
 				printf("I know of %d and %d, my pid is %d\n", pid1, pid2, getpid());
+				close(po[1]);
+				close(ro[0]);
 				
-				dup2(po[0], STDIN_FILENO);
-				dup2(ro[1], STDOUT_FILENO);
+				if(dup2(po[0], STDIN_FILENO) == -1)
+					exit_error("could not dup2");
 
-//				if (redirect_pipe(po[0], ro[1]) == -1)
-//					exit_error("failed to redirect");
-	
+				if(dup2(ro[1], STDOUT_FILENO) == -1)
+					exit_error("could not dup2");
+
+				close(ro[1]);
+				close(po[0]);	
 				execlp("./forkFFT", "./forkFFT", NULL);
-				exit(EXIT_SUCCESS);
+				exit(EXIT_FAILURE); // should not be reached
 			
 			}else if ( (pid1 == 0) && (pid2 == 0)){ // child 2
 				printf("I know of %d and %d, my pid is %d\n", pid1, pid2, getpid());
-			
-				if (redirect_pipe(pe[0], re[1]) == -1)
-					exit_error("failed to redirect");
-			
+	
+				close(pe[1]);
+				close(re[0]);
+				
+				if(dup2(pe[0], STDIN_FILENO) == -1)
+					exit_error("could not dup2");
+
+				if(dup2(re[1], STDOUT_FILENO) == -1)
+					exit_error("could not dup2");
+
+				close(re[1]);
+				close(pe[0]);	
+	
 				execlp("./forkFFT", "./forkFFT", NULL);
-				exit(EXIT_SUCCESS);
+				exit(EXIT_FAILURE); // should not be reached
 			}
 			fprintf(stderr, "I'm the parent...\n");	
 		}
