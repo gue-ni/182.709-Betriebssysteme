@@ -13,41 +13,6 @@
 int main(int argc, char *argv[])
 {
 
-
-	int pid1 = 0, pid2 = 0;
-	int pipefd_1[2], pipefd_2[2];
-	
-	if(pipe(pipefd_1) == -1 || pipe(pipefd_2) == -1){
-		fprintf("unabele to create pipe\n");
-	}
-
-	// create two child processes
-	pid1 = fork();
-
-//	if (pid1 != 0)
-//		pid2 = fork();
-
-	if ( (pid1 != 0) && (pid2 != 0) ){
-		// parent
-
-		printf("I'm parent of process %d and %d\n", pid1, pid2);
-		
-
-	} else if ( pid1 + pid2 > 0 ){
-		// child 1
-	}else{
-		// child 2
-		dup2(pipefd[0], STDIN_FILENO);
-		dup2(pipefd[1], STDOUT_FILENO);
-		
-		
-	}
-
-
-
-
-
-/*
 	char buf[BUFSIZE];
 	int n = 0;
  	float *array, value;
@@ -125,7 +90,7 @@ int main(int argc, char *argv[])
 	free(array);
 	free(pe);
 	free(po);
-*/
+
 	return 0;
 }
 
