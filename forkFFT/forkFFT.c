@@ -9,11 +9,19 @@
 
 #define OUTPUT 0
 #define INPUT 1  
+#define BUFSIZE 10
+#define EVEN 0
+#define ODD 1
 
 void complex_mult(complex x, complex y, complex *result)
 {
 	result->a = x.a * y.a - x.b * y.b;
 	result->b = x.a * y.b + x.b * y.a;
+}
+
+void debug(char *msg)
+{
+	fprintf(stderr, "(%d) %s\n", getpid(), msg);
 }
 
 void print_complex(complex *c)
@@ -57,7 +65,6 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "(%d) recursion is turned off...\n", getpid());
 	}
 
-
 	fprintf(stderr, "(%d) was started...\n", getpid());
 	int even_R[2];
 	int even_P[2];
@@ -73,12 +80,18 @@ int main(int argc, char *argv[])
 	pipe(odd_P);
 
 	char buf[10];
-	float value;
-	float fv[2];
+	char buffer[2][10];
 
 	int n = 0;
-	while (fgets(buf, sizeof(buf), stdin) != NULL){
-		fprintf(stderr, "(%d) has read something... %s", getpid(), buf);	
+	while (fgets(buf, sizeof(buf), stdin) != NULL && memcmp(buf, "\0", 1) != 0){
+//		fprintf(stderr, "(%d) has read something... %s", getpid(), buf);	
+
+		if (n % 2 == 0){
+			strncpy(buffer[EVEN], buf, 10);
+		}else{
+			strncpy(buffer[ODD], buf, 10);
+		}
+
 		if ( n == 1  && rec){ // TODO remove rec
 			fprintf(stderr, "(%d) forking...\n", getpid());
 			pid1 = fork();
@@ -103,9 +116,9 @@ int main(int argc, char *argv[])
 				dup2(odd_P[OUTPUT], STDIN_FILENO);
 
 				close_all(odd_R);
+				close_all(odd_P);
 				close_all(even_R);
 				close_all(even_P);
-				close_all(odd_P);
 
 				execlp("./forkFFT", "./forkFFT", "0", NULL);
 				fprintf(stderr, "Failed to execute '\n");
@@ -118,24 +131,31 @@ int main(int argc, char *argv[])
 			close(even_R[INPUT]);
 		}
 
-		if (n % 2 != 0 && n > 1){
-			fprintf(stderr, "writing to odd\n"); // TODO fix
-			write(odd_P[INPUT], buf, sizeof(buf));
-		} else if (n > 1){
-			fprintf(stderr, "writing to even \n"); // TODO fix
-			write(even_P[INPUT], buf, sizeof(buf));
+		if ( n % 2 != 0){ // at least two values have been read
+			fprintf(stderr, "(%d) writing...\n", getpid());
+			write(odd_P[INPUT], buffer[ODD], 10);
+			write(even_P[INPUT], buffer[EVEN], 10);
 		}
+
 		n++;
 	}
 
-	fprintf(stderr, "(%d) is finished reading, closing pipes...\n", getpid());
+//	fprintf(stderr, "(%d) is finished reading, closing pipes...\n", getpid());
 	close(even_P[INPUT]); // this should send EOF to child
 	close(odd_P[INPUT]); // why doesn't it?
 
 	if (n == 1){
-		fprintf(stderr, "read only one value...\n");
-		value = strtof(buf, NULL);
-		fprintf(stdout, "%f 0*i\n", value); 
+		close(odd_P[OUTPUT]);
+		close(odd_R[INPUT]);
+		close(even_R[INPUT]);
+		close(even_P[OUTPUT]);
+		
+//		fprintf(stderr, "(%d) read only one value... %s \n", getpid(), buf);
+		float value = strtof(buffer[EVEN], NULL);
+
+		fprintf(stdout, "%f 0.0*i\n", value); 
+		fprintf(stderr, "(%d) %f 0.0*i\n", getpid(), value); 
+
 		exit(EXIT_SUCCESS);
 	}
 
@@ -143,22 +163,37 @@ int main(int argc, char *argv[])
 		exit_error("Input array is not even");
 	}
 	
+	debug("works until here");
+	fprintf(stderr, "(%d) size of n: %d\n", getpid(), n);
+	
 	complex cval;
 	complex *R_e = malloc(sizeof(complex) * n/2);
+	if (R_e == NULL)
+		exit_error("failed to malloc");	
+
 	int k = 0;
 	while (read(even_R[OUTPUT], buf, sizeof(buf)) != -1){
 		parse_complex(buf, &cval);
-		R_e[k++] = cval;
+		R_e[k] = cval; // segfaults
+		k++;
 	} 
 	
 	complex *R_o = malloc(sizeof(complex) * n/2);
+	if (R_o == NULL)
+		exit_error("failed to malloc");	
+
 	k = 0;
 	while (read(odd_R[OUTPUT], buf, sizeof(buf)) != -1){
 		parse_complex(buf, &cval);
-		R_o[k++] = cval;
+		R_o[k] = cval;
+		k++;
 	}
 
 	complex *R = malloc(sizeof(complex) * n);
+	if (R == NULL)
+		exit_error("failed to malloc");	
+
+
 	complex tmp, exp;
 	for (k = 0; k < n/2; k++){
 		imexp(n, k, &exp);	
