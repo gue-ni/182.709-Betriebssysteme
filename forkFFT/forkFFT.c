@@ -5,10 +5,42 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include "forkFFT.h"
 
-#define INITIAL_SIZE 100
-#define BUFSIZE 10
-#define PI 3.141592654
+#define OUTPUT 0
+#define INPUT 1  
+
+void complex_mult(complex x, complex y, complex *result)
+{
+	result->a = x.a * y.a - x.b * y.b;
+	result->b = x.a * y.b + x.b * y.a;
+}
+
+void print_complex(complex *c)
+{
+	fprintf(stdout, "%f %f*i\n", c->a, c->b);
+}
+
+void parse_complex(char *buf, complex *result)
+{
+	char *endptr;
+	result->a = strtof(buf, &endptr);
+	result->b = strtof(endptr, NULL);
+}
+
+void close_all(int *fd)
+{
+	for (int i = 0; i < 2; i++){
+		close(fd[i]);
+	}
+}
+
+void imexp(int n, int k, complex *result)
+{
+	int x = (-(2 * PI) / n) * k;
+	result->a = cos(x);
+	result->b = sin(x);
+}
 
 void exit_error(char *msg)
 {
@@ -16,119 +48,144 @@ void exit_error(char *msg)
 	exit(EXIT_FAILURE);
 }
 
-int redirect_pipe(int in, int out)
-{
-	int infd = dup2(in, STDIN_FILENO);
-	int outfd = dup2(out, STDOUT_FILENO);
-	return -1 ? infd == -1 || outfd == -1 : 0; 
-}
-
 int main(int argc, char *argv[])
 {
-	char buf[10]; 
-	int pid1 = 0;
-	int pid2 = 0;
-	
-	int pe[2];
-	int re[2];
-	int po[2];
-	int ro[2];
+	int rec = 1;
 
-	if(pipe(pe) == -1 || pipe(re) == -1)
-		exit_error("unabele to create pipe");
-
-	if(pipe(po) == -1 || pipe(ro) == -1)
-		exit_error("unabele to create pipe");
+	if ( argc > 1){
+		rec = 0;	
+		fprintf(stderr, "(%d) recursion is turned off...\n", getpid());
+	}
 
 
-	float fbuf[2]; 
+	fprintf(stderr, "(%d) was started...\n", getpid());
+	int even_R[2];
+	int even_P[2];
+	int odd_R[2];
+	int odd_P[2];
 
+	int pid1, pid2;
+
+	// TODO check for return value
+	pipe(even_R);
+	pipe(even_P);
+	pipe(odd_R);
+	pipe(odd_P);
+
+	char buf[10];
+	float value;
+	float fv[2];
 
 	int n = 0;
-	float value;
 	while (fgets(buf, sizeof(buf), stdin) != NULL){
-		value = strtof(buf, NULL);
-		
-		if (n % 2 == 0){ 
-			fbuf[0] = value; 
-		} else {
-			fbuf[1] = value; 
-		}
-
-		if ( n % 2 != 0){ // write on every second read
-			write(pe[1], &value, sizeof(float)); // TODO change
-			write(po[1], &value, sizeof(float));
-			
-		}
-
-
-		if (n == 1){ // read two values, can go into recursion
-			
-			// create two child processes
+		fprintf(stderr, "(%d) has read something... %s", getpid(), buf);	
+		if ( n == 1  && rec){ // TODO remove rec
+			fprintf(stderr, "(%d) forking...\n", getpid());
 			pid1 = fork();
-			if (pid1 != 0) 
-				pid2 = fork();
 
-			if ( (pid1 != 0) && (pid2 == 0) ){ // child 1
-				printf("I know of %d and %d, my pid is %d\n", pid1, pid2, getpid());
-				close(po[1]);
-				close(ro[0]);
-				
-				if(dup2(po[0], STDIN_FILENO) == -1)
-					exit_error("could not dup2");
+			if (pid1 == 0){ // child 1
+				dup2(even_R[INPUT], STDOUT_FILENO);
+				dup2(even_P[OUTPUT], STDIN_FILENO);
 
-				if(dup2(ro[1], STDOUT_FILENO) == -1)
-					exit_error("could not dup2");
+				close_all(even_R);
+				close_all(even_P);
+				close_all(odd_R);
+				close_all(odd_P);
 
-				close(ro[1]);
-				close(po[0]);	
-				execlp("./forkFFT", "./forkFFT", NULL);
-				exit(EXIT_FAILURE); // should not be reached
-			
-			}else if ( (pid1 == 0) && (pid2 == 0)){ // child 2
-				printf("I know of %d and %d, my pid is %d\n", pid1, pid2, getpid());
-	
-				close(pe[1]);
-				close(re[0]);
-				
-				if(dup2(pe[0], STDIN_FILENO) == -1)
-					exit_error("could not dup2");
+				execlp("./forkFFT", "./forkFFT", "0", NULL);
+				fprintf(stderr, "Failed to execute '\n");
+				exit(EXIT_FAILURE);
+			} 
 
-				if(dup2(re[1], STDOUT_FILENO) == -1)
-					exit_error("could not dup2");
+			pid2 = fork();
+			if (pid2 == 0){ // child 2 
+				dup2(odd_R[INPUT], STDOUT_FILENO);
+				dup2(odd_P[OUTPUT], STDIN_FILENO);
 
-				close(re[1]);
-				close(pe[0]);	
-	
-				execlp("./forkFFT", "./forkFFT", NULL);
-				exit(EXIT_FAILURE); // should not be reached
-			}
-			fprintf(stderr, "I'm the parent...\n");	
+				close_all(odd_R);
+				close_all(even_R);
+				close_all(even_P);
+				close_all(odd_P);
+
+				execlp("./forkFFT", "./forkFFT", "0", NULL);
+				fprintf(stderr, "Failed to execute '\n");
+				exit(EXIT_FAILURE);
+			} 
+
+			close(even_P[OUTPUT]);
+			close(odd_P[OUTPUT]);
+			close(odd_R[INPUT]);
+			close(even_R[INPUT]);
 		}
 
+		if (n % 2 != 0 && n > 1){
+			fprintf(stderr, "writing to odd\n"); // TODO fix
+			write(odd_P[INPUT], buf, sizeof(buf));
+		} else if (n > 1){
+			fprintf(stderr, "writing to even \n"); // TODO fix
+			write(even_P[INPUT], buf, sizeof(buf));
+		}
 		n++;
 	}
 
+	fprintf(stderr, "(%d) is finished reading, closing pipes...\n", getpid());
+	close(even_P[INPUT]); // this should send EOF to child
+	close(odd_P[INPUT]); // why doesn't it?
+
 	if (n == 1){
-		fprintf(stdout, "%f\n", value);
+		fprintf(stderr, "read only one value...\n");
+		value = strtof(buf, NULL);
+		fprintf(stdout, "%f 0*i\n", value); 
 		exit(EXIT_SUCCESS);
 	}
 
-	int status, pid, c_count = 2;
-	while (c_count > 0) {
-		pid = wait(&status);
-
-		if (WIFEXITED(status)) {
-			if ( WEXITSTATUS(status) != 0 ){
-				printf("child %d exited with error\n", pid);
-				exit(EXIT_FAILURE);
-			}else{
-				printf("child %d exited normally\n", pid);
-			}
-		}
-		--c_count;
+	if (n % 2 != 0){
+		exit_error("Input array is not even");
+	}
+	
+	complex cval;
+	complex *R_e = malloc(sizeof(complex) * n/2);
+	int k = 0;
+	while (read(even_R[OUTPUT], buf, sizeof(buf)) != -1){
+		parse_complex(buf, &cval);
+		R_e[k++] = cval;
+	} 
+	
+	complex *R_o = malloc(sizeof(complex) * n/2);
+	k = 0;
+	while (read(odd_R[OUTPUT], buf, sizeof(buf)) != -1){
+		parse_complex(buf, &cval);
+		R_o[k++] = cval;
 	}
 
+	complex *R = malloc(sizeof(complex) * n);
+	complex tmp, exp;
+	for (k = 0; k < n/2; k++){
+		imexp(n, k, &exp);	
+		complex_mult(R_o[k], exp, &tmp);			
+			
+		(R+k)->a = (R_e+k)->a + tmp.a;
+		(R+k)->b = (R_e+k)->b + tmp.b;
+
+		(R+k+n/2)->a = (R_e+k)->a - tmp.a;	
+		(R+k+n/2)->b = (R_e+k)->b - tmp.b;	
+	}
+	
+	free(R_e);
+	free(R_o);
+
+	for (int i = 0; i < n; i++){
+		print_complex(R+i);
+	}
+
+	free(R);
+
+	int status;
+	close(even_R[OUTPUT]);
+	close(odd_R[OUTPUT]);
+
+	waitpid(pid1, &status, 0);
+	waitpid(pid2, &status, 0);
 	return EXIT_SUCCESS;
 }
 
