@@ -29,6 +29,8 @@ void print_complex(complex *c)
 	fprintf(stdout, "%f %f*i\n", c->a, c->b);
 }
 
+
+
 void parse_complex(char *buf, complex *result)
 {
 	char *endptr;
@@ -56,6 +58,22 @@ void exit_error(char *msg)
 	exit(EXIT_FAILURE);
 }
 
+void create_child(int *P, int *R, int *P1, int *R1)
+{
+	dup2(R[INPUT], STDOUT_FILENO);
+	dup2(P[OUTPUT], STDIN_FILENO);
+
+	close_all(R1);
+	close_all(P1);
+	close_all(R);
+	close_all(P);
+
+	execlp("./forkFFT", "./forkFFT", "0", NULL);
+	fprintf(stderr, "Failed to execute '\n");
+	exit(EXIT_FAILURE);
+
+}
+
 int main(int argc, char *argv[])
 {
 	int rec = 1;
@@ -65,7 +83,8 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "(%d) recursion is turned off...\n", getpid());
 	}
 
-	fprintf(stderr, "(%d) was started...\n", getpid());
+//	debug("was started")
+
 	int even_R[2];
 	int even_P[2];
 	int odd_R[2];
@@ -141,14 +160,16 @@ int main(int argc, char *argv[])
 	}
 
 //	fprintf(stderr, "(%d) is finished reading, closing pipes...\n", getpid());
-	close(even_P[INPUT]); // this should send EOF to child
-	close(odd_P[INPUT]); // why doesn't it?
+	close(even_P[INPUT]); 
+	close(odd_P[INPUT]); 
 
 	if (n == 1){
+		// could close all
 		close(odd_P[OUTPUT]);
 		close(odd_R[INPUT]);
 		close(even_R[INPUT]);
 		close(even_P[OUTPUT]);
+
 		
 //		fprintf(stderr, "(%d) read only one value... %s \n", getpid(), buf);
 		float value = strtof(buffer[EVEN], NULL);
@@ -163,27 +184,30 @@ int main(int argc, char *argv[])
 		exit_error("Input array is not even");
 	}
 	
-	debug("works until here");
 	fprintf(stderr, "(%d) size of n: %d\n", getpid(), n);
 	
 	complex cval;
-	complex *R_e = malloc(sizeof(complex) * n/2);
+	complex *R_e = malloc(sizeof(complex) * (n/2)); // segfault
 	if (R_e == NULL)
 		exit_error("failed to malloc");	
 
+	debug("works until here");
+
 	int k = 0;
-	while (read(even_R[OUTPUT], buf, sizeof(buf)) != -1){
+	while (read(even_R[OUTPUT], buf, sizeof(buf)) != -1 && k < n/2){
 		parse_complex(buf, &cval);
-		R_e[k] = cval; // segfaults
+		//print_complex(&cval);
+		R_e[k] = cval; //segfault 
 		k++;
 	} 
 	
-	complex *R_o = malloc(sizeof(complex) * n/2);
+	debug("and here");
+	complex *R_o = malloc(sizeof(complex) * (n/2));
 	if (R_o == NULL)
 		exit_error("failed to malloc");	
 
 	k = 0;
-	while (read(odd_R[OUTPUT], buf, sizeof(buf)) != -1){
+	while (read(odd_R[OUTPUT], buf, sizeof(buf)) != -1 && k < n/2){
 		parse_complex(buf, &cval);
 		R_o[k] = cval;
 		k++;
@@ -221,6 +245,7 @@ int main(int argc, char *argv[])
 
 	waitpid(pid1, &status, 0);
 	waitpid(pid2, &status, 0);
+
 	return EXIT_SUCCESS;
 }
 
