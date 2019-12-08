@@ -25,8 +25,8 @@ void complex_mult(complex x, complex y, complex *result)
 
 void debug(char *msg)
 {
-
-	if (DEBUG) fprintf(stderr, "(%d) %s\n", getpid(), msg);
+	if (DEBUG) 
+		fprintf(stderr, "(%d) %s\n", getpid(), msg);
 }
 
 void print_complex(complex *c)
@@ -83,7 +83,7 @@ void read_pipe(int fd, complex *R, int n)
 	char buf[100];
 	complex cval;
 	while (read(fd, buf, sizeof(buf)) != -1 && k < n/2){
-		fprintf(stderr, "reading from child: %s", buf);
+		fprintf(stderr, "(%d) reading from child: %s", getpid(), buf);
 		parse_complex(buf, &cval);
 		//print_complex(&cval);
 		R[k] = cval; 
@@ -118,8 +118,8 @@ int main(int argc, char *argv[])
 	memset(buffer[1], 0, sizeof(buffer[1]));
 
 	int n = 0;
-	while (fgets(buf, sizeof(buf), stdin) != NULL && strcmp(buf, "\n") != 0){
-		//fprintf(stderr, "(%d) has read something... %s", getpid(), buf);	
+	while (fgets(buf, sizeof(buf), stdin) != NULL && memcmp(buf, "\0", 1) != 0){
+		fprintf(stderr, "(%d) has read something... %s", getpid(), buf);	
 
 		if (n % 2 == 0){
 			strncpy(buffer[EVEN], buf, 10);
@@ -172,7 +172,7 @@ int main(int argc, char *argv[])
 		float value = strtof(buffer[EVEN], NULL);
 		fprintf(stdout, "%f 0.0*i\n", value); 
 		fprintf(stderr, "(%d) only one value %f 0.0*i\n", getpid(), value); 
-		close(STDOUT_FILENO);
+		//close(STDOUT_FILENO);
 		exit(EXIT_SUCCESS);
 	} else  if (n % 2 != 0){
 		exit_error("Input array is not even");
@@ -186,6 +186,7 @@ int main(int argc, char *argv[])
 	do {
 		waitpid(pid1, &status1, 0);
 		if (WIFEXITED(status1)) {
+			debug("child 1 exited...");
 			if (WEXITSTATUS(status1) == 1){
 				exit_error("child exited with error");
 				exit(EXIT_FAILURE);
@@ -197,6 +198,7 @@ int main(int argc, char *argv[])
 	do {
 		waitpid(pid2, &status2, 0);
 		if (WIFEXITED(status2)) {
+			debug("child 2 exited...");
 			if (WEXITSTATUS(status1) == 1){
 				exit_error("child exited with error");
 				exit(EXIT_FAILURE);
