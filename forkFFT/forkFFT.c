@@ -83,18 +83,19 @@ void read_pipe(int fd, complex *R, int n)
 	char buf[100];
 	complex cval;
 	while (read(fd, buf, sizeof(buf)) > 0 && k < n/2){
-		fprintf(stderr, "(%d) reading from child: %s", getpid(), buf);
+		if (DEBUG) fprintf(stderr, "(%d) reading from child: %s", getpid(), buf);
 		parse_complex(buf, &cval);
 		R[k] = cval; 
 		k++;
 	} 
 }
 
+
 int main(int argc, char *argv[])
 {
 	int rec = 1;
 	if (argc > 1){
-		rec = 0;
+		rec = 1;
 	}
 
 	int even_R[2];
@@ -117,9 +118,9 @@ int main(int argc, char *argv[])
 	memset(buffer[1], 0, sizeof(buffer[1]));
 
 	int n = 0;
-//	while (fgets(buf, sizeof(buf), stdin) != NULL && memcmp(buf, "\0", 1) != 0 && strcmp(buf, "\n") != 0){
-	while (fgets(buf, sizeof(buf), stdin) != NULL){
-		fprintf(stderr, "(%d) has read something... %s", getpid(), buf);	
+	while (fgets(buf, sizeof(buf), stdin) != NULL && memcmp(buf, "\0", 1) != 0 && strcmp(buf, "\n") != 0){
+//	while (fgets(buf, sizeof(buf), stdin) != NULL){
+		if (DEBUG) fprintf(stderr, "(%d) has read something... %s", getpid(), buf);	
 
 		if (n % 2 == 0){
 			strncpy(buffer[EVEN], buf, 10);
@@ -149,27 +150,33 @@ int main(int argc, char *argv[])
 				exit_error("error closing");
 			if(close(even_R[INPUT]) == -1)
 				exit_error("error closing");
+
+
 		}
 
 		if ( n % 2 != 0){ // at least two values have been read
-//			fprintf(stderr, "(%d) %d values, writing...\n", getpid(), n+1);
-			if (write(odd_P[INPUT],  buffer[ODD], 10) == -1)
+			fprintf(stderr, "(%d) %d values, writing...\n", getpid(), n+1);
+			int wrote = 0;
+			if ((wrote = write(odd_P[INPUT],  buffer[ODD], BUFSIZE)) == -1)
 				exit_error("error writing");
 
-			if (write(even_P[INPUT], buffer[EVEN], 10) == -1)
+			if ((wrote = write(even_P[INPUT], buffer[EVEN], BUFSIZE)) == -1)
 				exit_error("error writing");
+
+			if (DEBUG) fprintf(stderr, "(%d) wrote %d bytes\n", getpid(), wrote);
+
 		}
 		n++;
 	}
 
-	fprintf(stderr, "(%d) is finished reading, closing pipes...\n", getpid());
+	if (DEBUG) fprintf(stderr, "(%d) is finished reading, closing pipes...\n", getpid());
 	close(even_P[INPUT]); 
 	close(odd_P[INPUT]); 
 
 	if (n == 1){
 		float value = strtof(buffer[EVEN], NULL);
 		fprintf(stdout, "%f 0.0*i\n", value); 
-		fprintf(stderr, "(%d) only one value %f 0.0*i\n", getpid(), value); 
+		if (DEBUG) fprintf(stderr, "(%d) only one value %f 0.0*i\n", getpid(), value); 
 		exit(EXIT_SUCCESS);
 	} else  if (n % 2 != 0){
 		exit_error("Input array is not even");
@@ -203,7 +210,7 @@ int main(int argc, char *argv[])
 	} while (!WIFEXITED(status2));
 	
 
-	fprintf(stderr, "(%d) size of n: %d\n", getpid(), n);
+	if (DEBUG) fprintf(stderr, "(%d) size of n: %d\n", getpid(), n);
 	
 	complex *R_e = malloc(sizeof(complex) * (n/2)); 
 	read_pipe(even_R[OUTPUT], R_e, n);
@@ -230,7 +237,7 @@ int main(int argc, char *argv[])
 	free(R_e);
 	free(R_o);
 
-	fprintf(stderr, "writing output...\n");
+	debug("writing output...");
 	for (int i = 0; i < n; i++){
 		print_complex(R+i);
 	}
