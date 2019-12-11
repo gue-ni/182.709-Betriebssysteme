@@ -1,3 +1,13 @@
+/*
+	@author: Jakob G. Maier <e11809618@student.tuwien.ac.at>
+	@date: 2019-12-11 
+	@brief: forkFFT 
+
+	TODO:
+	read from child, the other stuff works so far
+	i get it, it gets the entire 128 bytes but parses only the first number on there
+
+*/
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
@@ -10,12 +20,12 @@
 #define OUTPUT 	0
 #define INPUT 	1  
 
-#define BUFSIZE 128 
+#define BUFSIZE 256
 
 #define EVEN 	0
 #define ODD 	1
 
-#define DEBUG 1 
+#define DEBUG 	0
 
 void complex_mult(complex x, complex y, complex *result)
 {
@@ -42,18 +52,25 @@ void parse_complex(char *buf, complex *result)
 	result->b = strtof(endptr, NULL);
 }
 
+void parse_mult_complex(char *buf, complex *result, int n)
+{
+	char *endptr;
+	endptr = buf;
+
+	for (int i = 0; i < n; i++){
+		result[i].a = strtof(endptr, &endptr);
+		result[i].b = strtof(endptr, &endptr);
+		endptr += 3; // cut of *i \n
+	}
+}
+
+
+
 void close_all(int *fd)
 {
 	for (int i = 0; i < 2; i++){
 		close(fd[i]);
 	}
-}
-
-void imexp(int n, int k, complex *result)
-{
-	int x = (-(2 * PI) / n) * k;
-	result->a = cos(x);
-	result->b = sin(x);
 }
 
 void exit_error(char *msg)
@@ -80,16 +97,15 @@ void create_child(int *P, int *R, int *P1, int *R1)
 void read_pipe(int fd, complex *R, int n)
 {
 	int k = 0;
-	char buf[100];
-	complex cval;
-	while (read(fd, buf, sizeof(buf)) > 0 && k < n/2){
+	char buf[BUFSIZE];
+//	complex cval;
+	//while (read(fd, buf, sizeof(buf)) > 0 && k < n/2){
+	while (read(fd, buf, sizeof(buf)) > 0){
 		if (DEBUG) fprintf(stderr, "(%d) reading from child: %s", getpid(), buf);
-		parse_complex(buf, &cval);
-		R[k] = cval; 
+		parse_mult_complex(buf, R, n/2);
 		k++;
 	} 
 }
-
 
 int main(int argc, char *argv[])
 {
@@ -118,7 +134,8 @@ int main(int argc, char *argv[])
 	memset(buffer[1], 0, sizeof(buffer[1]));
 
 	int n = 0;
-	while (fgets(buf, sizeof(buf), stdin) != NULL && memcmp(buf, "\0", 1) != 0 && strcmp(buf, "\n") != 0){
+	while (fgets(buf, sizeof(buf), stdin) != NULL && strcmp(buf, "\n") != 0){
+//	while (fgets(buf, sizeof(buf), stdin) != NULL && memcmp(buf, "\0", 1) != 0 && strcmp(buf, "\n") != 0){
 //	while (fgets(buf, sizeof(buf), stdin) != NULL){
 		if (DEBUG) fprintf(stderr, "(%d) has read something... %s", getpid(), buf);	
 
@@ -129,7 +146,7 @@ int main(int argc, char *argv[])
 		}
 
 		if ( n == 1 && rec == 1){ // TODO remove rec
-			fprintf(stderr, "(%d) forking...\n", getpid());
+			if (DEBUG) fprintf(stderr, "(%d) forking...\n", getpid());
 			pid1 = fork();
 			if (pid1 == 0){ // child 1
 				n = 0;
@@ -153,15 +170,15 @@ int main(int argc, char *argv[])
 		}
 
 		if ( n % 2 != 0){ // at least two values have been read
-			fprintf(stderr, "(%d) %d values, writing...\n", getpid(), n+1);
+			//if (DEBUG) fprintf(stderr, "(%d) %d values, writing...\n", getpid(), n+1);
 			int wrote = 0;
-			if ((wrote = write(odd_P[INPUT],  buffer[ODD], strlen(buffer[ODD]+1))) == -1)
+			if ((wrote = write(odd_P[INPUT],  buffer[ODD], strlen(buffer[ODD]))) == -1)
 				exit_error("error writing");
 
-			if ((wrote = write(even_P[INPUT], buffer[EVEN], strlen(buffer[EVEN]+1))) == -1)
+			if ((wrote = write(even_P[INPUT], buffer[EVEN], strlen(buffer[EVEN]))) == -1)
 				exit_error("error writing");
 
-			if (DEBUG) fprintf(stderr, "(%d) wrote %d bytes\n", getpid(), wrote);
+			//if (DEBUG) fprintf(stderr, "(%d) wrote %d bytes\n", getpid(), wrote);
 
 		}
 		n++;
@@ -188,7 +205,7 @@ int main(int argc, char *argv[])
 	do {
 		waitpid(pid1, &status1, 0);
 		if (WIFEXITED(status1)) {
-			debug("child 1 exited...");
+			if (DEBUG) fprintf(stderr, "(%d) child %d exited...\n", getpid(), pid1);
 			if (WEXITSTATUS(status1) == 1){
 				exit_error("child exited with error");
 				exit(EXIT_FAILURE);
@@ -199,7 +216,7 @@ int main(int argc, char *argv[])
 	do {
 		waitpid(pid2, &status2, 0);
 		if (WIFEXITED(status2)) {
-			debug("child 2 exited...");
+			if (DEBUG) fprintf(stderr, "(%d) child %d exited...\n", getpid(), pid2);
 			if (WEXITSTATUS(status1) == 1){
 				exit_error("child exited with error");
 				exit(EXIT_FAILURE);
@@ -221,8 +238,14 @@ int main(int argc, char *argv[])
 	complex *R = malloc(sizeof(complex) * n);
 
 	complex tmp, exp;
+	int x;
 	for (int k = 0; k < n/2; k++){
-		imexp(n, k, &exp);	
+
+
+		x = (-(2 * PI) / n) * k;
+		exp.a = cos(x);
+		exp.b = sin(x);
+
 		complex_mult(R_o[k], exp, &tmp);			
 			
 		(R+k)->a = (R_e+k)->a + tmp.a;

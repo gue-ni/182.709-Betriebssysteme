@@ -16,6 +16,7 @@ $(PROGS): % : %.o
 
 
 forkFFT.o: forkFFT.c forkFFT.h
+write_test.o: write_test.c forkFFT.h
 
 clean:
 	rm -f *.o $(PROGS)
