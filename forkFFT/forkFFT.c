@@ -190,7 +190,7 @@ int main(int argc, char *argv[])
 
 	if (n == 1){
 		float value = strtof(buffer[EVEN], NULL);
-		fprintf(stdout, "%f 0.0*i\n", value); 
+		printf("%f 0.0*i\n", value); 
 		if (DEBUG) fprintf(stderr, "(%d) only one value %f 0.0*i\n", getpid(), value); 
 		exit(EXIT_SUCCESS);
 	} else  if (n % 2 != 0){
