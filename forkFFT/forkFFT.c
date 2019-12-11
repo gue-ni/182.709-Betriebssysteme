@@ -39,28 +39,27 @@ void debug(char *msg)
 		fprintf(stderr, "(%d) %s\n", getpid(), msg);
 }
 
-void print_complex(complex *c)
+void print_complex(complex c)
 {
 
-	fprintf(stdout, "%f %f*i\n", c->a, c->b);
-}
-
-void parse_complex(char *buf, complex *result)
-{
-	char *endptr;
-	result->a = strtof(buf, &endptr);
-	result->b = strtof(endptr, NULL);
+	fprintf(stdout, "%f %f*i\n", c.a, c.b);
 }
 
 void parse_mult_complex(char *buf, complex *result, int n)
 {
 	char *endptr;
 	endptr = buf;
+	float a, b;
 
 	for (int i = 0; i < n; i++){
-		result[i].a = strtof(endptr, &endptr);
-		result[i].b = strtof(endptr, &endptr);
+		a = strtof(endptr, &endptr);
+		b = strtof(endptr, &endptr);
 		endptr += 3; // cut of *i \n
+		result[i].a = a;
+		result[i].b = b;
+
+		//printf("test: %f %f*i\n", result[i].a, result[i].b);
+
 	}
 }
 
@@ -96,14 +95,10 @@ void create_child(int *P, int *R, int *P1, int *R1)
 
 void read_pipe(int fd, complex *R, int n)
 {
-	int k = 0;
 	char buf[BUFSIZE];
-//	complex cval;
-	//while (read(fd, buf, sizeof(buf)) > 0 && k < n/2){
 	while (read(fd, buf, sizeof(buf)) > 0){
 		if (DEBUG) fprintf(stderr, "(%d) reading from child: %s", getpid(), buf);
-		parse_mult_complex(buf, R, n/2);
-		k++;
+		parse_mult_complex(buf, R, n);
 	} 
 }
 
@@ -228,31 +223,40 @@ int main(int argc, char *argv[])
 	if (DEBUG) fprintf(stderr, "(%d) size of n: %d\n", getpid(), n);
 	
 	complex *R_e = malloc(sizeof(complex) * (n/2)); 
-	read_pipe(even_R[OUTPUT], R_e, n);
+	read_pipe(even_R[OUTPUT], R_e, n/2);
 	close(even_R[OUTPUT]);
 
+	fprintf(stderr, "even:\n");
+	for (int i = 0; i < n/2; i++){
+		print_complex(R_e[i]);
+	}
+
+
 	complex *R_o = malloc(sizeof(complex) * (n/2));
-	read_pipe(odd_R[OUTPUT], R_o, n);
+	read_pipe(odd_R[OUTPUT], R_o, n/2);
 	close(odd_R[OUTPUT]);
+
+	fprintf(stderr, "odd:\n");
+	for (int i = 0; i < n/2; i++){
+		print_complex(R_o[i]);
+	}
 
 	complex *R = malloc(sizeof(complex) * n);
 
 	complex tmp, exp;
 	int x;
 	for (int k = 0; k < n/2; k++){
-
-
 		x = (-(2 * PI) / n) * k;
 		exp.a = cos(x);
 		exp.b = sin(x);
 
 		complex_mult(R_o[k], exp, &tmp);			
 			
-		(R+k)->a = (R_e+k)->a + tmp.a;
-		(R+k)->b = (R_e+k)->b + tmp.b;
+		R[k].a = R_e[k].a + tmp.a;
+		R[k].b = R_e[k].b + tmp.b;
 
-		(R+k+n/2)->a = (R_e+k)->a - tmp.a;	
-		(R+k+n/2)->b = (R_e+k)->b - tmp.b;	
+		R[k+n/2].a = R_e[k].a - tmp.a;	
+		R[k+n/2].b = R_e[k].b - tmp.b;	
 	}
 	
 	free(R_e);
@@ -260,7 +264,7 @@ int main(int argc, char *argv[])
 
 	debug("writing output...");
 	for (int i = 0; i < n; i++){
-		print_complex(R+i);
+		print_complex(R[i]);
 	}
 
 	free(R);
