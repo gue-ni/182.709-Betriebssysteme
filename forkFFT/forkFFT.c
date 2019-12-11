@@ -166,11 +166,10 @@ int main(int argc, char *argv[])
 
 		if ( n % 2 != 0){ // at least two values have been read
 			//if (DEBUG) fprintf(stderr, "(%d) %d values, writing...\n", getpid(), n+1);
-			int wrote = 0;
-			if ((wrote = write(odd_P[INPUT],  buffer[ODD], strlen(buffer[ODD]))) == -1)
+			if (write(odd_P[INPUT],  buffer[ODD], strlen(buffer[ODD])) == -1)
 				exit_error("error writing");
 
-			if ((wrote = write(even_P[INPUT], buffer[EVEN], strlen(buffer[EVEN]))) == -1)
+			if (write(even_P[INPUT], buffer[EVEN], strlen(buffer[EVEN])) == -1)
 				exit_error("error writing");
 
 			//if (DEBUG) fprintf(stderr, "(%d) wrote %d bytes\n", getpid(), wrote);
@@ -226,20 +225,9 @@ int main(int argc, char *argv[])
 	read_pipe(even_R[OUTPUT], R_e, n/2);
 	close(even_R[OUTPUT]);
 
-	fprintf(stderr, "even:\n");
-	for (int i = 0; i < n/2; i++){
-		print_complex(R_e[i]);
-	}
-
-
 	complex *R_o = malloc(sizeof(complex) * (n/2));
 	read_pipe(odd_R[OUTPUT], R_o, n/2);
 	close(odd_R[OUTPUT]);
-
-	fprintf(stderr, "odd:\n");
-	for (int i = 0; i < n/2; i++){
-		print_complex(R_o[i]);
-	}
 
 	complex *R = malloc(sizeof(complex) * n);
 
