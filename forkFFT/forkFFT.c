@@ -3,6 +3,8 @@
 	@date: 2019-12-11 
 	@brief: forkFFT 
 
+	TODO:
+	fix reading from child eg read_pipe and parse_complex
 
 
 */
@@ -97,7 +99,7 @@ void create_child(int *P, int *R, int *P1, int *R1)
 	exit(EXIT_FAILURE);
 }
 
-void read_pipe(int fd, complex *R, int n)
+void read_child(int fd, complex *R, int n)
 {
 	char buf[1024]; // size of 1 complex number
 	for (int i = 0; read(fd, buf, sizeof(buf)) > 0; i++){
@@ -222,8 +224,12 @@ int main(int argc, char *argv[])
 	if (DEBUG) fprintf(stderr, "(%d) size of n: %d\n", getpid(), n);
 	
 	complex *R_e = malloc(sizeof(complex) * (n/2)); 
-	read_pipe(even_R[OUTPUT], R_e, n/2);
+	read_child(even_R[OUTPUT], R_e, n/2);
 	close(even_R[OUTPUT]);
+
+	complex *R_o = malloc(sizeof(complex) * (n/2));
+	read_child(odd_R[OUTPUT], R_o, n/2);
+	close(odd_R[OUTPUT]);
 
 	if (1 && n > 1){
 		if (1)fprintf(stderr, "(%d) print even:\n", getpid());
@@ -231,10 +237,6 @@ int main(int argc, char *argv[])
 			if (1) print_complex_err(R_e[i]);
 		}
 	}
-
-	complex *R_o = malloc(sizeof(complex) * (n/2));
-	read_pipe(odd_R[OUTPUT], R_o, n/2);
-	close(odd_R[OUTPUT]);
 
 	if (1 && n > 1){
 		fprintf(stderr, "(%d) print odd:\n", getpid());
