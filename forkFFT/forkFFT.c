@@ -39,6 +39,19 @@ void print_complex(complex c)
 	fprintf(stdout, "%.7f %.7f*i\n", c.a, c.b);
 }
 
+void print_complex_err(complex c)
+{
+	fprintf(stderr, "(%d) %.7f %.7f*i\n", getpid(), c.a, c.b);
+}
+
+void parse_complex(char *buf, complex *result)
+{
+	char *endptr;
+	endptr = buf;
+	result->a = strtof(endptr, &endptr);
+	result->b = strtof(endptr, NULL);
+}
+
 void parse_mult_complex(char *buf, complex *result, int n)
 {
 	char *endptr;
@@ -86,11 +99,13 @@ void create_child(int *P, int *R, int *P1, int *R1)
 
 void read_pipe(int fd, complex *R, int n)
 {
-	char buf[BUFSIZE];
-	while (read(fd, buf, sizeof(buf)) > 0){
-		if (DEBUG) fprintf(stderr, "(%d) reading from child: %s", getpid(), buf);
-		parse_mult_complex(buf, R, n);
-	} 
+	char buf[1024]; // size of 1 complex number
+	for (int i = 0; read(fd, buf, sizeof(buf)) > 0; i++){
+		//fprintf(stderr, "(%d) reading from child: %s", getpid(), buf);
+
+		parse_mult_complex(buf, R+i, n);
+		fprintf(stderr, "(%d) reading from child: %f %f*i\n", getpid(), R[i].a, R[i].b);
+	}
 }
 
 int main(int argc, char *argv[])
@@ -210,10 +225,10 @@ int main(int argc, char *argv[])
 	read_pipe(even_R[OUTPUT], R_e, n/2);
 	close(even_R[OUTPUT]);
 
-	if (m){
-		fprintf(stderr, "print even:\n");
+	if (1 && n > 1){
+		if (1)fprintf(stderr, "(%d) print even:\n", getpid());
 		for (int i = 0; i < n/2; i++){
-			print_complex(R_e[i]);
+			if (1) print_complex_err(R_e[i]);
 		}
 	}
 
@@ -221,13 +236,12 @@ int main(int argc, char *argv[])
 	read_pipe(odd_R[OUTPUT], R_o, n/2);
 	close(odd_R[OUTPUT]);
 
-	if (m){
-		fprintf(stderr, "print odd:\n");
+	if (1 && n > 1){
+		fprintf(stderr, "(%d) print odd:\n", getpid());
 		for (int i = 0; i < n/2; i++){
-			print_complex(R_o[i]);
-		}
+			if (1) print_complex_err(R_e[i]);
+		} 
 	}
-
 
 	complex *R = malloc(sizeof(complex) * n);
 
@@ -242,7 +256,7 @@ int main(int argc, char *argv[])
 			
 		R[k].a = R_e[k].a + tmp.a;
 		R[k].b = R_e[k].b + tmp.b;
-
+		
 		R[k+n/2].a = R_e[k].a - tmp.a;	
 		R[k+n/2].b = R_e[k].b - tmp.b;	
 	}
@@ -250,8 +264,9 @@ int main(int argc, char *argv[])
 	free(R_e);
 	free(R_o);
 
-	debug("writing output...");
+	if (0) fprintf(stderr, "(%d) output:\n", getpid());
 	for (int i = 0; i < n; i++){
+		if (1) fprintf(stderr, "(%d) writing output: %f %f*i\n", getpid(), R[i].a, R[i].b);
 		print_complex(R[i]);
 	}
 
