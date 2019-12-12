@@ -3,9 +3,7 @@
 	@date: 2019-12-11 
 	@brief: forkFFT 
 
-	TODO:
-	read from child, the other stuff works so far
-	i get it, it gets the entire 128 bytes but parses only the first number on there
+
 
 */
 #include <stdio.h>
@@ -19,13 +17,10 @@
 
 #define OUTPUT 	0
 #define INPUT 	1  
-
-#define BUFSIZE 256
-
+#define BUFSIZE (256)
 #define EVEN 	0
 #define ODD 	1
-
-#define DEBUG 	0
+#define DEBUG   0	
 
 void complex_mult(complex x, complex y, complex *result)
 {
@@ -41,8 +36,7 @@ void debug(char *msg)
 
 void print_complex(complex c)
 {
-
-	fprintf(stdout, "%f %f*i\n", c.a, c.b);
+	fprintf(stdout, "%.7f %.7f*i\n", c.a, c.b);
 }
 
 void parse_mult_complex(char *buf, complex *result, int n)
@@ -59,11 +53,8 @@ void parse_mult_complex(char *buf, complex *result, int n)
 		result[i].b = b;
 
 		//printf("test: %f %f*i\n", result[i].a, result[i].b);
-
 	}
 }
-
-
 
 void close_all(int *fd)
 {
@@ -104,9 +95,12 @@ void read_pipe(int fd, complex *R, int n)
 
 int main(int argc, char *argv[])
 {
-	int rec = 1;
+	int rec = 1, m = 0;
 	if (argc > 1){
 		rec = 1;
+		m = 0;
+	} else {
+		m = 1;
 	}
 
 	int even_R[2];
@@ -130,8 +124,6 @@ int main(int argc, char *argv[])
 
 	int n = 0;
 	while (fgets(buf, sizeof(buf), stdin) != NULL && strcmp(buf, "\n") != 0){
-//	while (fgets(buf, sizeof(buf), stdin) != NULL && memcmp(buf, "\0", 1) != 0 && strcmp(buf, "\n") != 0){
-//	while (fgets(buf, sizeof(buf), stdin) != NULL){
 		if (DEBUG) fprintf(stderr, "(%d) has read something... %s", getpid(), buf);	
 
 		if (n % 2 == 0){
@@ -184,7 +176,7 @@ int main(int argc, char *argv[])
 
 	if (n == 1){
 		float value = strtof(buffer[EVEN], NULL);
-		printf("%f 0.0*i\n", value); 
+		printf("%.7f 0.0000000*i\n", value); 
 		if (DEBUG) fprintf(stderr, "(%d) only one value %f 0.0*i\n", getpid(), value); 
 		exit(EXIT_SUCCESS);
 	} else  if (n % 2 != 0){
@@ -196,28 +188,21 @@ int main(int argc, char *argv[])
 	}
 	
 	int status1, status2;
-	do {
-		waitpid(pid1, &status1, 0);
-		if (WIFEXITED(status1)) {
-			if (DEBUG) fprintf(stderr, "(%d) child %d exited...\n", getpid(), pid1);
-			if (WEXITSTATUS(status1) == 1){
-				exit_error("child exited with error");
-				exit(EXIT_FAILURE);
-			}
+	waitpid(pid2, &status2, 0);
+	if (WIFEXITED(status2)) {
+		if (DEBUG) fprintf(stderr, "(%d) child %d exited...\n", getpid(), pid2);
+		if (WEXITSTATUS(status1) == 1){
+			exit_error("child exited with error");
 		}
-	} while (!WIFEXITED(status1));
+	}
 
-	do {
-		waitpid(pid2, &status2, 0);
-		if (WIFEXITED(status2)) {
-			if (DEBUG) fprintf(stderr, "(%d) child %d exited...\n", getpid(), pid2);
-			if (WEXITSTATUS(status1) == 1){
-				exit_error("child exited with error");
-				exit(EXIT_FAILURE);
-			}
+	waitpid(pid1, &status1, 0);
+	if (WIFEXITED(status1)) {
+		if (DEBUG) fprintf(stderr, "(%d) child %d exited...\n", getpid(), pid1);
+		if (WEXITSTATUS(status1) == 1){
+			exit_error("child exited with error");
 		}
-	} while (!WIFEXITED(status2));
-	
+	}
 
 	if (DEBUG) fprintf(stderr, "(%d) size of n: %d\n", getpid(), n);
 	
@@ -225,9 +210,24 @@ int main(int argc, char *argv[])
 	read_pipe(even_R[OUTPUT], R_e, n/2);
 	close(even_R[OUTPUT]);
 
+	if (m){
+		fprintf(stderr, "print even:\n");
+		for (int i = 0; i < n/2; i++){
+			print_complex(R_e[i]);
+		}
+	}
+
 	complex *R_o = malloc(sizeof(complex) * (n/2));
 	read_pipe(odd_R[OUTPUT], R_o, n/2);
 	close(odd_R[OUTPUT]);
+
+	if (m){
+		fprintf(stderr, "print odd:\n");
+		for (int i = 0; i < n/2; i++){
+			print_complex(R_o[i]);
+		}
+	}
+
 
 	complex *R = malloc(sizeof(complex) * n);
 
