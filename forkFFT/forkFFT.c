@@ -108,7 +108,7 @@ int main(int argc, char *argv[])
 	}
 
 	if (n == 0){
-		exit_error("did not read anything");
+		exit_error("Did not read anything");
 	}
 	
 	int status1, status2;
@@ -155,7 +155,7 @@ int main(int argc, char *argv[])
 	}
 
 	complex *R = malloc(sizeof(complex) * n);
-
+	
 	complex tmp, exp;
 	int x;
 	for (int k = 0; k < n/2; k++){
@@ -182,7 +182,6 @@ int main(int argc, char *argv[])
 	}
 
 	free(R);
-
 	return EXIT_SUCCESS;
 }
 
