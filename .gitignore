@@ -11,7 +11,9 @@
 *.sh
 *.txt
 
-!*.pdf
+*.pdf
+forkFFT
+
 
 # Directories
 exercise1-examples/
