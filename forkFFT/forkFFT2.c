@@ -3,6 +3,8 @@
 	@date: 2019-12-11 
 	@brief: forkFFT 
 
+	TODO: 
+	- documentation
 
 
 */
@@ -13,7 +15,8 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include "forkFFT.h"
+#include <complex.h>
+#include "forkFFT2.h"
 #include "childIO.h"
 
 char *prog = "<not defined>";
@@ -30,6 +33,7 @@ void check_error(int v)
 		exit_error("an error occured");
 	}
 }
+
 int main(int argc, char *argv[])
 {
 	prog = argv[0];
@@ -116,7 +120,7 @@ int main(int argc, char *argv[])
 		exit_error("child encountered error");
 	}
 
-	complex *R_e = malloc(sizeof(complex) * (n/2)); 
+	float complex *R_e = malloc(sizeof(float complex) * (n/2)); 
 	if (R_e == NULL)
 		exit_error("malloc failed");
 
@@ -124,37 +128,32 @@ int main(int argc, char *argv[])
 	if(close(even_R[OUTPUT]) == -1) 
 		exit_error("error closing");
 
-	complex *R_o = malloc(sizeof(complex) * (n/2));
-	if (R_o == NULL)
-		exit_error("malloc failed");
+	float complex *R_o = malloc(sizeof(float complex) * (n/2));
+	if (R_o == NULL) exit_error("malloc failed");
 
 	read_child(odd_R[OUTPUT], R_o, n/2);
 	if(close(odd_R[OUTPUT]) == -1) exit_error("error closing");
 	
-	complex *R = malloc(sizeof(complex) * n);
+	float complex *R = malloc(sizeof(float complex) * n);
 	if (R == NULL)
 		exit_error("malloc failed");
 
-	complex tmp, exp;
+	float complex exp;
 	float x;
 	for (int k = 0; k < n/2; k++){
 		x = (-(2 * PI) / n) * k;
-		exp.a = cos(x);
-		exp.b = sin(x);
+		
+		exp = cos(x) + sin(x) * I;
 
-		complex_mult(&tmp, R_o[k], exp);			
-			
-		R[k].a = R_e[k].a + tmp.a;
-		R[k].b = R_e[k].b + tmp.b;
-		R[k+n/2].a = R_e[k].a - tmp.a;	
-		R[k+n/2].b = R_e[k].b - tmp.b;	
+		R[k] = R_e[k] + exp * R_o[k];
+		R[k+n/2] = R_e[k] - exp * R_o[k];
 	}
 	
 	free(R_e);
 	free(R_o);
 
 	for (int i = 0; i < n; i++){
-		print_complex(R[i]);
+		fprintf(stdout, "%f %f*i\n", creal(R[i]), cimag(R[i]));
 	}
 
 	free(R);

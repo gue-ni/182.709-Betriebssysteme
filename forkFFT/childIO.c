@@ -5,38 +5,43 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <complex.h>
 #include "childIO.h"
-#include "forkFFT.h"
+#include "forkFFT2.h"
 
 
-void read_child(int fd, complex *R, int n)
+void read_child(int fd, float complex *R, int n)
 {
 	char buf[1024]; 
 	for (int i = 0; read(fd, buf, sizeof(buf)) > 0; i++){
-		parse_mult_complex(buf, R+i, n);
+		parse_mult_complex_2(buf, R+i, n);
 	}
 }
 
+void parse_mult_complex_2(char *buf, float complex *result, int n)
+{
+	char *endptr;
+	endptr = buf;
+	float a, b;
+
+	for (int i = 0; i < n; i++){
+		a = strtof(endptr, &endptr);
+		b = strtof(endptr, &endptr);
+		endptr += 3; // cut of *i \n
+		result[i] = a + b*I;
+	}
+}
+
+/*
 void complex_mult(complex *result, complex x, complex y)
 {
 	result->a = x.a * y.a - x.b * y.b;
 	result->b = x.a * y.b + x.b * y.a;
 }
 
-void debug(char *msg)
-{
-	if (DEBUG) 
-		fprintf(stderr, "(%d) %s\n", getpid(), msg);
-}
-
 void print_complex(complex c)
 {
 	fprintf(stdout, "%f %f*i\n", c.a, c.b);
-}
-
-void print_complex_err(complex c)
-{
-	fprintf(stderr, "(%d) %f %f*i\n", getpid(), c.a, c.b);
 }
 
 void parse_complex(char *buf, complex *result)
@@ -59,8 +64,11 @@ void parse_mult_complex(char *buf, complex *result, int n)
 		endptr += 3; // cut of *i \n
 		result[i].a = a;
 		result[i].b = b;
+
+
 	}
 }
+*/
 
 void close_all(int *fd)
 {
@@ -69,18 +77,6 @@ void close_all(int *fd)
 	}
 }
 
-void exit_error(char *msg)
-{
-	fprintf(stderr, "%s\n", msg);
-	exit(EXIT_FAILURE);
-}
-
-void check_error(int v)
-{
-	if (v == -1){
-		exit_error("an error occured");
-	}
-}
 
 void create_child(int *P, int *R, int *P1, int *R1)
 {
@@ -92,7 +88,7 @@ void create_child(int *P, int *R, int *P1, int *R1)
 	close_all(R);
 	close_all(P);
 
-	execlp("./forkFFT", "./forkFFT", "0", NULL);
-	fprintf(stderr, "Failed to execute '\n");
+	execlp("./forkFFT2", "./forkFFT2", NULL);
+	fprintf(stderr, "Failed to execute\n");
 	exit(EXIT_FAILURE);
 }
