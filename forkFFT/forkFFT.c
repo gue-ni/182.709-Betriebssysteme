@@ -130,24 +130,24 @@ int main(int argc, char *argv[])
 
 	if (DEBUG) fprintf(stderr, "(%d) size of n: %d\n", getpid(), n);
 
-	fprintf(stderr, "(%d) reading from even\n", getpid());	
+	//fprintf(stderr, "(%d) reading from even\n", getpid());	
 	complex *R_e = malloc(sizeof(complex) * (n/2)); 
 	read_child(even_R[OUTPUT], R_e, n/2);
 	close(even_R[OUTPUT]);
 
-	fprintf(stderr, "(%d) reading from odd\n", getpid());	
+	//fprintf(stderr, "(%d) reading from odd\n", getpid());	
 	complex *R_o = malloc(sizeof(complex) * (n/2));
 	read_child(odd_R[OUTPUT], R_o, n/2);
 	close(odd_R[OUTPUT]);
 
-	if (1 && n > 1){
+	if (0 && n > 1){
 		if (1)fprintf(stderr, "(%d) print even:\n", getpid());
 		for (int i = 0; i < n/2; i++){
 			if (1) print_complex_err(R_e[i]);
 		}
 	}
 
-	if (1 && n > 1){
+	if (0 && n > 1){
 		fprintf(stderr, "(%d) print odd:\n", getpid());
 		for (int i = 0; i < n/2; i++){
 			if (1) print_complex_err(R_o[i]);
@@ -157,7 +157,7 @@ int main(int argc, char *argv[])
 	complex *R = malloc(sizeof(complex) * n);
 	
 	complex tmp, exp;
-	int x;
+	float x;
 	for (int k = 0; k < n/2; k++){
 		x = (-(2 * PI) / n) * k;
 		exp.a = cos(x);
@@ -177,7 +177,7 @@ int main(int argc, char *argv[])
 
 	if (0) fprintf(stderr, "(%d) output:\n", getpid());
 	for (int i = 0; i < n; i++){
-		if (1) fprintf(stderr, "(%d) writing calculated output: %f %f*i\n", getpid(), R[i].a, R[i].b);
+		if (0) fprintf(stderr, "(%d) writing calculated output: %f %f*i\n", getpid(), R[i].a, R[i].b);
 		print_complex(R[i]);
 	}
 
