@@ -10,8 +10,7 @@
 *.html
 *.sh
 *.txt
-
-forkFFT
+*.py
 
 # Directories
 exercise1-examples/
