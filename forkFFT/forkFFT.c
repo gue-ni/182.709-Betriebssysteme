@@ -25,15 +25,16 @@ int main(int argc, char *argv[])
 
 	int pid1, pid2;
 
-	pipe(even_R);
-	pipe(even_P);
-	pipe(odd_R);
-	pipe(odd_P);
+	check_error(pipe(even_R));
+	check_error(pipe(even_P));
+	check_error(pipe(odd_R));
+	check_error(pipe(odd_P));
 
 	char buf[BUFSIZE];
 	char buffer[2][BUFSIZE];
 
-	memset(buf, 0, sizeof(buf));
+	// TODO check out what's going wrong here
+//	memset(buf, 0, sizeof(buf));
 	memset(buffer[0], 0, sizeof(buffer[0]));
 	memset(buffer[1], 0, sizeof(buffer[1]));
 
@@ -48,28 +49,23 @@ int main(int argc, char *argv[])
 
 		if ( n == 1){ 
 			pid1 = fork();
+			check_error(pid1);
 			if (pid1 == 0){ // child 1
 				n = 0;
 				create_child(even_P, even_R, odd_P, odd_R);
 			} 
 
 			pid2 = fork();
+			check_error(pid2);
 			if (pid2 == 0){ // child 2 
 				n = 0;
 				create_child(odd_P, odd_R, even_P, even_R);
 			} 
 
-			if (close(even_P[OUTPUT]) == -1)
-				exit_error("error closeing");
-
-			if(close(odd_P[OUTPUT]) == -1)
-				exit_error("error closing");
-
-			if(close(odd_R[INPUT]) == -1)
-				exit_error("error closing");
-
-			if(close(even_R[INPUT]) == -1)
-				exit_error("error closing");
+			if(close(even_P[OUTPUT]) == -1) exit_error("error closing");
+			if(close(odd_P[OUTPUT])  == -1) exit_error("error closing");
+			if(close(odd_R[INPUT])   == -1) exit_error("error closing");
+			if(close(even_R[INPUT])  == -1) exit_error("error closing");
 		}
 
 		if ( n % 2 != 0){ // at least two values have been read
@@ -82,39 +78,47 @@ int main(int argc, char *argv[])
 		n++;
 	}
 
-	close(even_P[INPUT]); 
-	close(odd_P[INPUT]); 
-
-	if (n == 1){
-		float value = strtof(buffer[EVEN], NULL);
-		printf("%f 0.0*i\n", value);  
-		exit(EXIT_SUCCESS);
-	} else  if (n % 2 != 0){
-		exit_error("Input array is not even");
-	}
+	if (close(even_P[INPUT]) == -1) exit_error("error closing"); 
+	if (close(odd_P[INPUT]) == -1) exit_error("error closing"); 
 
 	if (n == 0){
 		exit_error("Did not read anything");
-	}
-	
-	int status1, status2;
-	waitpid(pid2, &status2, 0);
-	waitpid(pid1, &status1, 0);
 
+	} else if(n == 1){
+		printf("%f 0.0*i\n", strtof(buffer[EVEN], NULL));  
+		exit(EXIT_SUCCESS);
+
+	} else if (n % 2 != 0){
+		exit_error("Input array is not even");
+	}
+
+	int status1, status2;
+	waitpid(pid1, &status1, 0);
+	waitpid(pid2, &status2, 0);
+	
 	if (WEXITSTATUS(status1) == 1 || WEXITSTATUS(status2) == 1){
 		exit_error("child encountered error");
 	}
 
 	complex *R_e = malloc(sizeof(complex) * (n/2)); 
+	if (R_e == NULL)
+		exit_error("malloc failed");
+
 	read_child(even_R[OUTPUT], R_e, n/2);
-	close(even_R[OUTPUT]);
+	if(close(even_R[OUTPUT]) == -1) 
+		exit_error("error closing");
 
 	complex *R_o = malloc(sizeof(complex) * (n/2));
-	read_child(odd_R[OUTPUT], R_o, n/2);
-	close(odd_R[OUTPUT]);
+	if (R_o == NULL)
+		exit_error("malloc failed");
 
-	complex *R = malloc(sizeof(complex) * n);
+	read_child(odd_R[OUTPUT], R_o, n/2);
+	if(close(odd_R[OUTPUT]) == -1) exit_error("error closing");
 	
+	complex *R = malloc(sizeof(complex) * n);
+	if (R == NULL)
+		exit_error("malloc failed");
+
 	complex tmp, exp;
 	float x;
 	for (int k = 0; k < n/2; k++){

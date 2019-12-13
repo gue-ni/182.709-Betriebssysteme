@@ -75,6 +75,13 @@ void exit_error(char *msg)
 	exit(EXIT_FAILURE);
 }
 
+void check_error(int v)
+{
+	if (v == -1){
+		exit_error("an error occured");
+	}
+}
+
 void create_child(int *P, int *R, int *P1, int *R1)
 {
 	dup2(R[INPUT], STDOUT_FILENO);

@@ -4,6 +4,7 @@
 void read_child(int fd, complex *R, int n);
 void complex_mult(complex *result, complex x, complex y);
 void debug(char *msg);
+void check_error(int v);
 void print_complex(complex c);
 void print_complex_err(complex c);
 void parse_complex(char *buf, complex *result);
