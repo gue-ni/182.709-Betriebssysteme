@@ -142,9 +142,8 @@ int main(int argc, char *argv[])
 	float x;
 	for (int k = 0; k < n/2; k++){
 		x = (-(2 * PI) / n) * k;
+		exp = cos(x)+sin(x)*I;
 		
-		exp = cos(x) + sin(x) * I;
-
 		R[k] = R_e[k] + exp * R_o[k];
 		R[k+n/2] = R_e[k] - exp * R_o[k];
 	}

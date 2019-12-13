@@ -32,51 +32,12 @@ void parse_mult_complex_2(char *buf, float complex *result, int n)
 	}
 }
 
-/*
-void complex_mult(complex *result, complex x, complex y)
-{
-	result->a = x.a * y.a - x.b * y.b;
-	result->b = x.a * y.b + x.b * y.a;
-}
-
-void print_complex(complex c)
-{
-	fprintf(stdout, "%f %f*i\n", c.a, c.b);
-}
-
-void parse_complex(char *buf, complex *result)
-{
-	char *endptr;
-	endptr = buf;
-	result->a = strtof(endptr, &endptr);
-	result->b = strtof(endptr, NULL);
-}
-
-void parse_mult_complex(char *buf, complex *result, int n)
-{
-	char *endptr;
-	endptr = buf;
-	float a, b;
-
-	for (int i = 0; i < n; i++){
-		a = strtof(endptr, &endptr);
-		b = strtof(endptr, &endptr);
-		endptr += 3; // cut of *i \n
-		result[i].a = a;
-		result[i].b = b;
-
-
-	}
-}
-*/
-
 void close_all(int *fd)
 {
 	for (int i = 0; i < 2; i++){
 		close(fd[i]);
 	}
 }
-
 
 void create_child(int *P, int *R, int *P1, int *R1)
 {
