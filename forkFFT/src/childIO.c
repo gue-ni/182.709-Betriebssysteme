@@ -7,7 +7,7 @@
 #include <sys/wait.h>
 #include <complex.h>
 #include "childIO.h"
-#include "forkFFT2.h"
+#include "forkFFT.h"
 
 
 void read_child(int fd, float complex *R, int n)
@@ -49,7 +49,7 @@ void create_child(int *P, int *R, int *P1, int *R1)
 	close_all(R);
 	close_all(P);
 
-	execlp("./forkFFT2", "./forkFFT2", NULL);
+	execlp("./forkFFT", "./forkFFT", NULL);
 	fprintf(stderr, "Failed to execute\n");
 	exit(EXIT_FAILURE);
 }

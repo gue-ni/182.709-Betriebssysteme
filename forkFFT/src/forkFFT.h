@@ -3,11 +3,6 @@
 
 #define PI 3.141592654
 
-typedef struct {
-        float a;
-        float b;
-} complex;
-
 #define OUTPUT 	0
 #define INPUT 	1  
 #define BUFSIZE (256)

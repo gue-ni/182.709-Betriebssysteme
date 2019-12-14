@@ -1,4 +1,4 @@
-#include "forkFFT2.h"
+#include "forkFFT.h"
 #ifndef childIO_H__
 #define childIO_H__
 void read_child(int fd, float complex *R, int n);
