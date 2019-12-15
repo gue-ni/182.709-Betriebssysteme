@@ -9,9 +9,6 @@ DEPS = childIO
 
 all: $(PROGS)
 
-install: all
-	rm -f *.o
-
 $(PROGS): % : %.o $(DEPS:=.o)
 	$(CC) -o $@ $^ $(LFLAGS)
 
