@@ -10,4 +10,6 @@
 #define ODD 	1
 #define DEBUG   0	
 
+void exit_error(char *msg);
+void check_error(int v);
 #endif 

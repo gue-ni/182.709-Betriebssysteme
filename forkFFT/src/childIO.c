@@ -11,45 +11,57 @@
 
 /**
  * @brief reads n complex numbers from filedescriptor and stores them in R
+ * @details
+ * @param fd filedescriptor to read from
+ * @param R array to store the complex numbers received
+ * @param n number of numbers to read
  */ 
 void read_child(int fd, float complex *R, int n)
 {
-	char buf[1024]; 
-	for (int i = 0; read(fd, buf, sizeof(buf)) > 0; i++){
-		parse_mult_complex_2(buf, R+i, n);
-	}
-}
+	size_t s = sizeof(char) * n * 22; // 22 is the max char length a complex number can have
+	char *buf = malloc(s);
+	if (buf == NULL) exit_error("malloc failed");
 
-void parse_mult_complex_2(char *buf, float complex *result, int n)
-{
-	char *endptr;
-	endptr = buf;
+	if (read(fd, buf, s) == -1) exit_error("error reading");
+	
 	float a, b;
-
+	char *endptr = buf;
+	
 	for (int i = 0; i < n; i++){
 		a = strtof(endptr, &endptr);
 		b = strtof(endptr, &endptr);
-		endptr += 3; // cut of *i \n
-		result[i] = a + b*I;
+		endptr += 3; // cut of "*i \n"
+		R[i] = a + b*I;
 	}
+
+	free(buf);
 }
 
-void close_all(int *fd)
+/**
+ * @brief close both ends of an unnamed pipe
+ * @param int array that contains two filedescriptors
+ */
+void close_both_ends(int *fd)
 {
 	for (int i = 0; i < 2; i++){
-		close(fd[i]);
+		if(close(fd[i]) == -1) exit_error("error closing");
 	}
 }
 
-void create_child(int *P, int *R, int *P1, int *R1)
+/**
+ * @brief redirect two filedescriptors to stdin and stdout 
+ * respectivly and execute ./forkFFT recursivly
+ * @details read end of P will be redirected to stdin, write end of R to stdout 
+ * @param P int array containing a pipe
+ * @param R int array containing a pipe
+ */
+void create_child(int *P, int *R)
 {
-	dup2(R[INPUT], STDOUT_FILENO);
 	dup2(P[OUTPUT], STDIN_FILENO);
+	dup2(R[INPUT], STDOUT_FILENO);
 
-	close_all(R1);
-	close_all(P1);
-	close_all(R);
-	close_all(P);
+	close_both_ends(R);
+	close_both_ends(P);
 
 	execlp("./forkFFT", "./forkFFT", NULL);
 	fprintf(stderr, "Failed to execute\n");
