@@ -5,9 +5,12 @@ LFLAGS = -lm
 PROGS = forkFFT
 DEPS = childIO 
 
-.PHONY: all clean
+.PHONY: all clean install
 
 all: $(PROGS)
+
+install: all
+	rm -f *.o
 
 $(PROGS): % : %.o $(DEPS:=.o)
 	$(CC) -o $@ $^ $(LFLAGS)

@@ -6,7 +6,6 @@
 	TODO: 
 	- documentation
 
-
 */
 #include <stdio.h>
 #include <math.h>
@@ -34,6 +33,12 @@ void check_error(int v)
 	}
 }
 
+/**
+ * @brief
+ * 
+ * 
+ * @return returns EXIT_SUCCESS
+ */
 int main(int argc, char *argv[])
 {
 	prog = argv[0];
@@ -54,31 +59,24 @@ int main(int argc, char *argv[])
 	char buffer[2][BUFSIZE];
 
 	// TODO check out what's going wrong here
-//	memset(buf, 0, sizeof(buf));
 	memset(buffer[0], 0, sizeof(buffer[0]));
 	memset(buffer[1], 0, sizeof(buffer[1]));
 
 	int n = 0;
 	while (fgets(buf, sizeof(buf), stdin) != NULL && strcmp(buf, "\n") != 0){
-
-		if (n % 2 == 0){
-			strncpy(buffer[EVEN], buf, 10);
-		}else{
-			strncpy(buffer[ODD], buf, 10);
-		}
+		
+		strncpy(buffer[n%2], buf, sizeof(buf));
 
 		if ( n == 1){ 
 			pid1 = fork();
 			check_error(pid1);
 			if (pid1 == 0){ // child 1
-				n = 0;
 				create_child(even_P, even_R, odd_P, odd_R);
 			} 
 
 			pid2 = fork();
 			check_error(pid2);
 			if (pid2 == 0){ // child 2 
-				n = 0;
 				create_child(odd_P, odd_R, even_P, even_R);
 			} 
 

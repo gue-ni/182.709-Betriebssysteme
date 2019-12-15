@@ -9,7 +9,9 @@
 #include "childIO.h"
 #include "forkFFT.h"
 
-
+/**
+ * @brief reads n complex numbers from filedescriptor and stores them in R
+ */ 
 void read_child(int fd, float complex *R, int n)
 {
 	char buf[1024]; 
