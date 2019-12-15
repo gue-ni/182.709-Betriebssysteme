@@ -2,7 +2,7 @@
  * @file childIO.c
  * @author Jakob G. Maier <e11809618@student.tuwien.ac.at>
  * @date 2019-12-11 
- * @brief utility functions for 
+ * @brief utility functions for communication with child processes 
  */ 
 #include <math.h>
 #include <stdio.h>
@@ -17,7 +17,6 @@
 
 /**
  * @brief reads n complex numbers from filedescriptor and stores them in R
- * @details
  * @param fd filedescriptor to read from
  * @param R array to store the complex numbers received
  * @param n number of numbers to read
