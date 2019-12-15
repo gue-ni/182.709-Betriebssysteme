@@ -8,7 +8,8 @@
 #define FREE_SEM    "/free_sem"
 #define USED_SEM    "/used_sem"
 #define MUTEX       "/mutex_sem"
-#define MAX_DATA (256)
+#define MAX_DATA    (256)
+#define PROG "not defined"
 
 struct shared_mem {
     int read_pos;
@@ -17,10 +18,5 @@ struct shared_mem {
 };
 
 void test(void);
-void buf_write(int value);
-int buf_read(void);
-
-
-
 #endif /* util_H__ */
 

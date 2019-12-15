@@ -1,22 +1,9 @@
 #include <stdio.h>
 #include <semaphore.h>
+#include <stdlib.h>
 #include "util.h"
 
-void test()
+void test(void)
 {
-    printf("hello\n");
+    printf("test\n");
 }
-
-void buf_write(int val)
-{
-//    sem_wait(free_sem);
-
-
-}
-
-int buf_read()
-{
-    return 1;
-}
-
-
