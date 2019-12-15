@@ -10,10 +10,9 @@
 #include <signal.h>
 #include "util.h"
 
-
 static int shmfd = -1;
 sem_t *free_sem, *used_sem, *mutex;
-struct shared_mem *circ_buf;
+struct circ_buf *cbuf;
 char *prog;
 
 void write_message(char *msg)
@@ -27,19 +26,16 @@ void exit_error(char *msg)
     exit(EXIT_FAILURE);
 }
 
-
-
 void free_resources(void)
 {
-//    fprintf(stderr, "free resouces\n");
     write_message("free resources");
-    munmap(circ_buf, sizeof(*circ_buf));
+    munmap(cbuf, sizeof(*cbuf));
     close(shmfd);
     sem_close(mutex);
     sem_close(free_sem);
     sem_close(used_sem);
+    sem_unlink(MUTEX);
 }
-
 
 int main(int argc, char *argv[])
 {
@@ -50,10 +46,10 @@ int main(int argc, char *argv[])
     if ((shmfd = shm_open(SHM_NAME, O_RDWR | O_CREAT, 0600)) == -1)
         exit_error("shm_open failed");
 
-    struct shared_mem *circ_buf;
-    circ_buf = mmap(NULL, sizeof(*circ_buf), PROT_READ | PROT_WRITE, MAP_SHARED, shmfd, 0);
+    struct circ_buf *c_buf;
+    c_buf = mmap(NULL, sizeof(*c_buf), PROT_READ | PROT_WRITE, MAP_SHARED, shmfd, 0);
 
-    if (circ_buf == MAP_FAILED) exit_error("mmap failed");
+    if (c_buf == MAP_FAILED) exit_error("mmap failed");
 
     free_sem = sem_open(FREE_SEM, 0);
     if (free_sem == SEM_FAILED)
@@ -63,16 +59,16 @@ int main(int argc, char *argv[])
     if (used_sem == SEM_FAILED)
         exit_error("used_sem failed");
    
-    mutex = sem_open(MUTEX, O_CREAT | O_EXCL, 0600, 0);
+    mutex = sem_open(MUTEX, O_CREAT, 0600, 0);
     if (mutex == SEM_FAILED)
-        exit_error("free_sem failed");
+        exit_error("mutex failed");
    
     /* write */
     int value = 1;
     sem_wait(free_sem);
-    circ_buf->data[circ_buf->write_pos] = value;
+    c_buf->data[c_buf->write_pos] = value;
     sem_post(used_sem);
-    circ_buf->write_pos = (circ_buf->write_pos + 1) % MAX_DATA;
+    c_buf->write_pos = (c_buf->write_pos + 1) % MAX_DATA;
     write_message("wrote something");
     return EXIT_SUCCESS;
 }
