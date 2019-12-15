@@ -71,6 +71,7 @@ int main(int argc, char *argv[])
     
     struct sigaction sa;
     sa.sa_handler = handle_signal;
+    //struct sigaction sa = { .sa_hander = handle_signal; };
     sigaction(SIGINT, &sa, NULL);
 
     if ((shmfd = shm_open(SHM_NAME, O_RDWR | O_CREAT, 0600)) == -1)
@@ -102,11 +103,13 @@ int main(int argc, char *argv[])
         fprintf(stderr, "waiting to read...\n");
 
         if (sem_wait(used_sem) == -1){
-            exit_error("something happended");
+            fprintf(stderr, "sem_wait was interrupted\n");
             if (errno == EINTR){
                 fprintf(stderr, "[%s] sem_wait was interrupted\n", prog);
                 continue;
             }
+
+            exit_error("something happended");
         }
         write_message("reading...");
         value = cbuf->data[cbuf->read_pos];
