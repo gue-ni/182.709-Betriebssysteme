@@ -1,11 +1,17 @@
-#include <stdio.h>
+/**
+ * @file childIO.c
+ * @author Jakob G. Maier <e11809618@student.tuwien.ac.at>
+ * @date 2019-12-11 
+ * @brief utility functions for 
+ */ 
 #include <math.h>
+#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <sys/types.h>
-#include <sys/wait.h>
 #include <complex.h>
+#include <sys/wait.h>
+#include <sys/types.h>
 #include "childIO.h"
 #include "forkFFT.h"
 
@@ -64,6 +70,5 @@ void create_child(int *P, int *R)
 	close_both_ends(P);
 
 	execlp("./forkFFT", "./forkFFT", NULL);
-	fprintf(stderr, "Failed to execute\n");
-	exit(EXIT_FAILURE);
+	exit_error("Failed to execute");
 }

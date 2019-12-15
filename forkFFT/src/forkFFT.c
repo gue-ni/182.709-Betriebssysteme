@@ -1,12 +1,9 @@
-/*
-	@author: Jakob G. Maier <e11809618@student.tuwien.ac.at>
-	@date: 2019-12-11 
-	@brief: forkFFT 
-
-	TODO: 
-	- documentation
-
-*/
+/**
+ * @file forkFFT.c
+ * @author Jakob G. Maier <e11809618@student.tuwien.ac.at>
+ * @date 2019-12-11 
+ * @brief
+ */ 
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
@@ -171,4 +168,3 @@ int main(int argc, char *argv[])
 	free(R);
 	return EXIT_SUCCESS;
 }
-
