@@ -20,7 +20,7 @@ int *perm;
 char *prog;
 struct circ_buf *buf;
 static int shmfd = -1;
-struct edge *E, *solution;
+struct edge *edges, *solution;
 sem_t *free_sem, *used_sem, *mutex;
 
 /**
@@ -59,25 +59,25 @@ static void allocate_resources(void)
  */
 static void free_resources(void)
 {
-//    fprintf(stdout, "[%s] free resources\n", prog);
-    free(E);
+    fprintf(stdout, "[%s] free resources\n", prog);
+    free(edges);
     free(perm);
     free(solution);
     if (munmap(buf, sizeof(*buf)) == -1) 
         exit_error(prog, "munmap failed");
-    
+
     if (close(shmfd) == -1) 
         exit_error(prog, "close failed");
-    
+
     if (sem_close(free_sem) == -1) 
         exit_error(prog, "sem_close failed");
-    
+
     if (sem_close(mutex) == -1) 
         exit_error(prog, "sem_close failed");
-    
+
     if (sem_close(used_sem) == -1) 
         exit_error(prog, "sem_close failed");
-    
+
     sem_unlink(MUTEX);
 }
 
@@ -95,21 +95,20 @@ static int max(int x, int y){ return x > y ? x : y; }
  * @param
  * @return
  */
-static void parse_edge(struct edge *e, char *buf, int *m)
+static void parse_edge(struct edge *edge, char *buf, int *m)
 {
     char *endptr;
-    e->u = strtol(buf, &endptr, 10);
-    e->v = abs(strtol(endptr, NULL, 10));
-
-    int local_max = max(e->u, e->v);
-    *m = max(local_max, *m);
+    edge->u = strtol(buf, &endptr, 10);
+    edge->v = abs(strtol(endptr, NULL, 10));
+    *m = max(max(edge->u, edge->v), *m); 
 }
 
 /**
- * @brief
- * @details
- * @param
- * @return
+ * @brief shuffle vertices
+ * @details implements the Fisher-Yates shuffle algorithm
+ * @param a array to store shuffled data
+ * @param n size of array
+ * @return void
  */
 static void fisher_yates(int *a, int n)
 {
@@ -136,8 +135,8 @@ static int monte_carlo(struct edge *solution, int *perm, int n)
             return -1;
         }
 
-        if (perm[ E[i].u ] > perm[ E[i].v ]){ // invalid write here
-            solution[size++] = E[i];
+        if (perm[ edges[i].u ] > perm[ edges[i].v ]){ // invalid write here
+            solution[size++] = edges[i];
         }
     }
     return size;
@@ -158,12 +157,12 @@ int main(int argc, char *argv[])
     allocate_resources();
 
     int nV = 0, nE = argc - 1;
-    E = malloc(sizeof(struct edge) * nE);
-    if (E == NULL) 
+    edges = malloc(sizeof(struct edge) * nE);
+    if (edges == NULL) 
         exit_error(prog, "malloc failed");
     
     for (int i = 1; i < argc; ++i){
-        parse_edge(E+(i-1), argv[i], &nV);
+        parse_edge(edges+(i-1), argv[i], &nV);
     }
     nV++;
 //    printf("number of vertices: %d, number of edges: %d\n", nV, nE);

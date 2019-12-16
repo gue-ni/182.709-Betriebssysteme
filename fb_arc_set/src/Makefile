@@ -18,8 +18,6 @@ $(PROGS): %: %.o $(DEPS:=.o)
 %.o: %.c $(DEPS:=.h)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-test.o: test.c
-
 clean:
 	rm -rf *.o $(PROGS)
 
