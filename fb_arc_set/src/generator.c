@@ -16,7 +16,7 @@
 #include <signal.h>
 #include "common.h"
 
-int *perm;
+int *perm, *array;
 char *prog;
 struct circ_buf *buf;
 static int shmfd = -1;
@@ -59,10 +59,11 @@ static void allocate_resources(void)
  */
 static void free_resources(void)
 {
-    // fprintf(stdout, "[%s] free resources\n", prog);
+    fprintf(stdout, "[%s] free resources\n", prog);
     free(E);
     free(perm);
     free(solution);
+    free(array);
     if (munmap(buf, sizeof(*buf)) == -1) exit_error(prog, "munmap failed");
     if (close(shmfd) == -1) exit_error(prog, "close failed");
     if (sem_close(free_sem) == -1) exit_error(prog, "sem_close failed");
@@ -101,10 +102,11 @@ static void parse_edge(struct edge *e, char *buf, int *m)
  * @param
  * @return
  */
-static void fisher_yates(int *shuffled, int n)
+static void fisher_yates(int *shuffled, int *array, int n)
 {
     int j = 0;
-    int *array  = malloc(sizeof(int) * n);
+    //printf("n: %d\n", n);
+//    int *array  = malloc(sizeof(int) * n);
     if (array == NULL)
         exit_error(prog, "malloc failed");
 
@@ -121,21 +123,25 @@ static void fisher_yates(int *shuffled, int n)
         shuffled[array[i]] = i;
     }
 
-    free(array);
+//    free(array);
 }
 
 /**
  * @brief
  * @details
  * @param
- * @return
+ * @return size of solution, -1 if solution is larger than MAX_SOLUTION_SIZE
  */
-static int monte_carlo(struct edge *solution, int *perm, int nE)
+static int monte_carlo(struct edge *solution, int *perm, int n)
 {
     memset(solution, 0, sizeof(struct edge) * MAX_SOLUTION_SIZE);
     int size = 0;
-    for (int i = 0; i < nE; i++){
-        if (perm[E[i].u] > perm[E[i].v]){
+    for (int i = 0; i < n; i++){
+        if (size >= MAX_SOLUTION_SIZE){
+            return -1;
+        }
+
+        if (perm[ E[i].u ] > perm[ E[i].v ]){ // invalid write here
             solution[size++] = E[i];
         }
     }
@@ -165,8 +171,14 @@ int main(int argc, char *argv[])
         parse_edge(E+(i-1), argv[i], &nV);
     }
     nV++;
+    printf("number of vertices: %d, number of edges: %d\n", nV, nE);
 
-    perm        = malloc(sizeof(int) * nV);
+    array = malloc(sizeof(int) * nV);
+    for (int i = 0; i < nV; i++){ 
+        array[i] = i; 
+    }
+
+    perm  = malloc(sizeof(int) * nV);
     if (perm == NULL) 
         exit_error(prog, "malloc failed");
 
@@ -177,8 +189,10 @@ int main(int argc, char *argv[])
     int size = 0, min_solution = INT_MAX;
     while (!buf->quit){
     
-        fisher_yates(perm, nV);
-        size = monte_carlo(solution, perm, nE);        
+        fisher_yates(perm, array, nV);
+        size = monte_carlo(solution, perm, nE); 
+        if (size == -1) // solution is too large anyway
+            continue;       
 
         if (size < min_solution && size <= MAX_SOLUTION_SIZE){ // <= causes lockup
            
