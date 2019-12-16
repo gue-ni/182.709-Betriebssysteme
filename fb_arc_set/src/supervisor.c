@@ -34,7 +34,7 @@ volatile sig_atomic_t quit = 0;
  */
 static void print_solution(struct edge *solution, int size)
 {
-    printf("[%s] solution with %d edges: ", prog, size);
+    printf("[%s] Solution with %d edges: ", prog, size);
     for (int i = 0; i < size; i++){
         printf("%d-%d ", solution[i].u, solution[i].v);
     }

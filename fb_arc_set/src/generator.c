@@ -16,7 +16,7 @@
 #include <signal.h>
 #include "common.h"
 
-int *perm, *array;
+int *perm; 
 char *prog;
 struct circ_buf *buf;
 static int shmfd = -1;
@@ -59,16 +59,25 @@ static void allocate_resources(void)
  */
 static void free_resources(void)
 {
-    fprintf(stdout, "[%s] free resources\n", prog);
+//    fprintf(stdout, "[%s] free resources\n", prog);
     free(E);
     free(perm);
     free(solution);
-    free(array);
-    if (munmap(buf, sizeof(*buf)) == -1) exit_error(prog, "munmap failed");
-    if (close(shmfd) == -1) exit_error(prog, "close failed");
-    if (sem_close(free_sem) == -1) exit_error(prog, "sem_close failed");
-    if (sem_close(mutex) == -1) exit_error(prog, "sem_close failed");
-    if (sem_close(used_sem) == -1) exit_error(prog, "sem_close failed");
+    if (munmap(buf, sizeof(*buf)) == -1) 
+        exit_error(prog, "munmap failed");
+    
+    if (close(shmfd) == -1) 
+        exit_error(prog, "close failed");
+    
+    if (sem_close(free_sem) == -1) 
+        exit_error(prog, "sem_close failed");
+    
+    if (sem_close(mutex) == -1) 
+        exit_error(prog, "sem_close failed");
+    
+    if (sem_close(used_sem) == -1) 
+        exit_error(prog, "sem_close failed");
+    
     sem_unlink(MUTEX);
 }
 
@@ -102,28 +111,14 @@ static void parse_edge(struct edge *e, char *buf, int *m)
  * @param
  * @return
  */
-static void fisher_yates(int *shuffled, int *array, int n)
+static void fisher_yates(int *a, int n)
 {
     int j = 0;
-    //printf("n: %d\n", n);
-//    int *array  = malloc(sizeof(int) * n);
-    if (array == NULL)
-        exit_error(prog, "malloc failed");
-
     for (int i = 0; i < n; i++){
-        j = rand() % (i+1);
-
-        if (j != i)
-            array[i] = array[j];
-
-        array[j] = i;
+        j = rand() % (i + 1);
+        a[i] = a[j];
+        a[j] = i;
     }
-
-    for (int i = 0; i < n; i++){
-        shuffled[array[i]] = i;
-    }
-
-//    free(array);
 }
 
 /**
@@ -171,25 +166,20 @@ int main(int argc, char *argv[])
         parse_edge(E+(i-1), argv[i], &nV);
     }
     nV++;
-    printf("number of vertices: %d, number of edges: %d\n", nV, nE);
-
-    array = malloc(sizeof(int) * nV);
-    for (int i = 0; i < nV; i++){ 
-        array[i] = i; 
-    }
+//    printf("number of vertices: %d, number of edges: %d\n", nV, nE);
 
     perm  = malloc(sizeof(int) * nV);
     if (perm == NULL) 
         exit_error(prog, "malloc failed");
 
-    solution    = malloc(sizeof(struct edge) * MAX_SOLUTION_SIZE);
+    solution = malloc(sizeof(struct edge) * MAX_SOLUTION_SIZE);
     if (solution == NULL) 
         exit_error(prog, "malloc failed"); 
     
     int size = 0, min_solution = INT_MAX;
     while (!buf->quit){
     
-        fisher_yates(perm, array, nV);
+        fisher_yates(perm, nV);
         size = monte_carlo(solution, perm, nE); 
         if (size == -1) // solution is too large anyway
             continue;       
