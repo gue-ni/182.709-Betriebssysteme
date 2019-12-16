@@ -23,6 +23,12 @@ volatile sig_atomic_t quit = 0;
 struct circ_buf *buf;
 char *prog;
 
+/**
+ * @brief
+ * @details
+ * @param
+ * @return
+ */
 void print_solution(struct edge *solution, int solsize)
 {
     printf("[%s] solution with %d edges: ", prog, solsize);
@@ -32,28 +38,35 @@ void print_solution(struct edge *solution, int solsize)
     printf("\n");
 }
 
+/**
+ * @brief
+ * @details
+ * @param
+ * @return
+ */
 void write_message(char *msg)
 {
     printf("[%s] %s\n", prog, msg);
 }
 
+/**
+ * @brief
+ * @details
+ * @param
+ * @return
+ */
 void exit_error(char *msg)
 {
     fprintf(stderr, "%s %s\n", prog, msg);
     exit(EXIT_FAILURE);
 }
 
-
-int buf_read(int *buf, int *read_pos)
-{
-    sem_wait(used_sem);
-    int val = buf[*read_pos];
-    sem_post(free_sem);
-    *read_pos = (*read_pos + 1) % MAX_DATA;
-    fprintf(stderr, "read value: %d", val);
-    return val;
-}
-
+/**
+ * @brief
+ * @details
+ * @param
+ * @return
+ */
 void handle_signal(int s)
 {
     //write(0, "handle signal\n", 14);
@@ -61,6 +74,12 @@ void handle_signal(int s)
     buf->quit = 1;
 }
 
+/**
+ * @brief
+ * @details
+ * @param
+ * @return
+ */
 void allocate_resources(void)
 {
     if ((shmfd = shm_open(SHM_NAME, O_RDWR | O_CREAT, 0600)) == -1)
@@ -83,10 +102,14 @@ void allocate_resources(void)
     used_sem = sem_open(USED_SEM, 0);
     if (used_sem == SEM_FAILED)
         exit_error("used_sem failed");
-
-
 }
 
+/**
+ * @brief
+ * @details
+ * @param
+ * @return
+ */
 void free_resources(void)
 {
     if (shmfd != -1){
@@ -101,6 +124,12 @@ void free_resources(void)
     }
 }
 
+/**
+ * @brief
+ * @details
+ * @param
+ * @return
+ */
 int main(int argc, char *argv[])
 {
     prog = argv[0];

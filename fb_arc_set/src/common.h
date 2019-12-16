@@ -1,15 +1,15 @@
 /**
- * @file util.h
+ * @file common.h
  */
 #ifndef common_H__
 #define common_H__
 
 #include <signal.h>
-#define SHM_NAME    "/shared"
-#define FREE_SEM    "/fb_free"
-#define USED_SEM    "/fb_used"
-#define MUTEX       "/fb_mutex"
-#define MAX_DATA    (256)
+#define SHM_NAME            "/shared"
+#define FREE_SEM            "/fb_free"
+#define USED_SEM            "/fb_used"
+#define MUTEX               "/fb_mutex"
+#define MAX_DATA            (256)
 #define MAX_SOLUTION_SIZE   (8)
 
 struct edge {
@@ -25,7 +25,6 @@ struct circ_buf {
     struct edge data[MAX_DATA][MAX_SOLUTION_SIZE];
 };
 
-//void write_message(char *prog, char *msg);
 void test(void);
 #endif /* common_H__ */
 
