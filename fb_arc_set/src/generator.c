@@ -29,7 +29,7 @@ sem_t *free_sem, *used_sem, *mutex;
  * @param
  * @return
  */
-void allocate_resources(void)
+static void allocate_resources(void)
 {
     if ((shmfd = shm_open(SHM_NAME, O_RDWR | O_CREAT, 0600)) == -1)
         exit_error(prog, "shm_open failed");
@@ -57,7 +57,7 @@ void allocate_resources(void)
  * @param
  * @return
  */
-void free_resources(void)
+static void free_resources(void)
 {
     // fprintf(stdout, "[%s] free resources\n", prog);
     free(E);
@@ -77,7 +77,7 @@ void free_resources(void)
  * @param
  * @return
  */
-int max(int x, int y){ return x > y ? x : y; }
+static int max(int x, int y){ return x > y ? x : y; }
 
 /**
  * @brief
@@ -85,7 +85,7 @@ int max(int x, int y){ return x > y ? x : y; }
  * @param
  * @return
  */
-void parse_edge(struct edge *e, char *buf, int *m)
+static void parse_edge(struct edge *e, char *buf, int *m)
 {
     char *endptr;
     e->u = strtol(buf, &endptr, 10);
@@ -101,7 +101,7 @@ void parse_edge(struct edge *e, char *buf, int *m)
  * @param
  * @return
  */
-void fisher_yates(int *shuffled, int n)
+static void fisher_yates(int *shuffled, int n)
 {
     int j = 0;
     int *array  = malloc(sizeof(int) * n);
@@ -130,7 +130,7 @@ void fisher_yates(int *shuffled, int n)
  * @param
  * @return
  */
-int monte_carlo(struct edge *solution, int *perm, int nE)
+static int monte_carlo(struct edge *solution, int *perm, int nE)
 {
     memset(solution, 0, sizeof(struct edge) * MAX_SOLUTION_SIZE);
     int size = 0;
@@ -158,7 +158,8 @@ int main(int argc, char *argv[])
 
     int nV = 0, nE = argc - 1;
     E = malloc(sizeof(struct edge) * nE);
-    if (E == NULL) exit_error(prog, "malloc failed");
+    if (E == NULL) 
+        exit_error(prog, "malloc failed");
     
     for (int i = 1; i < argc; ++i){
         parse_edge(E+(i-1), argv[i], &nV);
@@ -166,10 +167,12 @@ int main(int argc, char *argv[])
     nV++;
 
     perm        = malloc(sizeof(int) * nV);
-    if (perm == NULL) exit_error(prog, "malloc failed");
+    if (perm == NULL) 
+        exit_error(prog, "malloc failed");
 
     solution    = malloc(sizeof(struct edge) * MAX_SOLUTION_SIZE);
-    if (solution == NULL) exit_error(prog, "malloc failed"); 
+    if (solution == NULL) 
+        exit_error(prog, "malloc failed"); 
     
     int size = 0, min_solution = INT_MAX;
     while (!buf->quit){

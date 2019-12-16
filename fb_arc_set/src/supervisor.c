@@ -32,7 +32,7 @@ volatile sig_atomic_t quit = 0;
  * @param size
  * @return void
  */
-void print_solution(struct edge *solution, int size)
+static void print_solution(struct edge *solution, int size)
 {
     printf("[%s] solution with %d edges: ", prog, size);
     for (int i = 0; i < size; i++){
@@ -47,7 +47,7 @@ void print_solution(struct edge *solution, int size)
  * @param
  * @return
  */
-void handle_signal(int s)
+static void handle_signal(int s)
 {
     quit = 1;
     buf->quit = 1;
@@ -59,7 +59,7 @@ void handle_signal(int s)
  * @param
  * @return
  */
-void allocate_resources(void)
+static void allocate_resources(void)
 {
     if ((shmfd = shm_open(SHM_NAME, O_RDWR | O_CREAT, 0600)) == -1)
         exit_error(prog, "shm_open failed");
@@ -69,7 +69,8 @@ void allocate_resources(void)
 
     buf = mmap(NULL, sizeof(*buf), PROT_READ | PROT_WRITE, MAP_SHARED, shmfd, 0);
 
-    if (buf == MAP_FAILED) exit_error(prog, "mmap failed");
+    if (buf == MAP_FAILED) 
+        exit_error(prog, "mmap failed");
 
     free_sem = sem_open(FREE_SEM, O_CREAT | O_EXCL, 0600, MAX_DATA);
     used_sem = sem_open(USED_SEM, O_CREAT | O_EXCL, 0600, 0);
@@ -89,17 +90,30 @@ void allocate_resources(void)
  * @param
  * @return
  */
-void free_resources(void)
+static void free_resources(void)
 {
     if (shmfd != -1){
         // printf("[%s] free resources\n", prog);
-        if (munmap(buf, sizeof(*buf)) == -1) exit_error(prog, "munmap failed");
-        if (close(shmfd) == -1) exit_error(prog, "close failed");
-        if (shm_unlink(SHM_NAME) == -1) exit_error(prog, "shm_unlink failed");
-        if (sem_close(free_sem) == -1)  exit_error(prog, "sem_close failed");
-        if (sem_close(used_sem) == -1)  exit_error(prog, "sem_close failed");
-        if (sem_unlink(FREE_SEM) == -1) exit_error(prog, "sem_unlink failed");
-        if (sem_unlink(USED_SEM) == -1) exit_error(prog, "sem_uknlink failed");
+        if (munmap(buf, sizeof(*buf)) == -1) 
+            exit_error(prog, "munmap failed");
+
+        if (close(shmfd) == -1) 
+            exit_error(prog, "close failed");
+
+        if (shm_unlink(SHM_NAME) == -1) 
+            exit_error(prog, "shm_unlink failed");
+
+        if (sem_close(free_sem) == -1)  
+            exit_error(prog, "sem_close failed");
+
+        if (sem_close(used_sem) == -1)  
+            exit_error(prog, "sem_close failed");
+
+        if (sem_unlink(FREE_SEM) == -1) 
+            exit_error(prog, "sem_unlink failed");
+
+        if (sem_unlink(USED_SEM) == -1) 
+            exit_error(prog, "sem_uknlink failed");
     }
 }
 
