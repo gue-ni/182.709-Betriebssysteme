@@ -20,18 +20,23 @@
  *
  */
 struct edge {
-    int u;
-    int v;
+    unsigned int u;
+    unsigned int v;
 };
 
 /**
- *
+ * 
+ * read_pos: read position on circular buffer
+ * write_pos: write position on circular buffer
+ * quit: generators exit when set to 1
+ * solution_size: size of the solution written to the buffer, should not be larger than 8
+ * data: array containing the solutions 
  */
 struct circ_buf {
-    int read_pos;
-    int write_pos;
+    unsigned int read_pos;
+    unsigned int write_pos;
     volatile sig_atomic_t quit;
-    uint8_t solution_size[MAX_DATA];
+    unsigned int solution_size[MAX_DATA];
     struct edge data[MAX_DATA][MAX_SOLUTION_SIZE];
 };
 

@@ -19,10 +19,10 @@
 #include <signal.h>
 #include "common.h"
 
-char *prog;
-struct circ_buf *buf;
+static char *prog;
+static struct circ_buf *buf;
 static int shmfd = -1;
-sem_t *free_sem, *used_sem;
+static sem_t *free_sem, *used_sem;
 volatile sig_atomic_t quit = 0;
 
 /**
@@ -51,6 +51,18 @@ static void handle_signal(int s)
 {
     quit = 1;
     buf->quit = 1;
+}
+
+/**
+ * @brief
+ * @details
+ * @param
+ * @return
+ */
+static void usage(void)
+{
+    fprintf(stderr, "USAGE: %s\n", prog);
+    exit(EXIT_FAILURE);
 }
 
 /**
@@ -126,6 +138,10 @@ static void free_resources(void)
 int main(int argc, char *argv[])
 {
     prog = argv[0];
+
+    if (argc != 1)
+        usage();
+
     if (atexit(free_resources) != 0)
         exit_error(prog, "resources not freed");
     
