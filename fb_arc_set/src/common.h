@@ -1,8 +1,8 @@
 /**
  * @file util.h
  */
-#ifndef util_H__
-#define util_H__
+#ifndef common_H__
+#define common_H__
 
 #include <signal.h>
 #define SHM_NAME    "/shared"
@@ -27,5 +27,5 @@ struct circ_buf {
 
 //void write_message(char *prog, char *msg);
 void test(void);
-#endif /* util_H__ */
+#endif /* common_H__ */
 

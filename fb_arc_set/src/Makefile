@@ -3,7 +3,7 @@ CFLAGS = -std=c99 -pedantic -Wall -D_DEFAULT_SOURCE -D_BSD_SOURCE -D_SVID_SOURCE
 LFLAGS = -lm -lrt -pthread
 
 PROGS = supervisor generator test 
-DEPS = util 
+DEPS = common 
 
 .PHONY: all clean
 

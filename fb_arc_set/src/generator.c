@@ -1,3 +1,9 @@
+/**
+ * @file generator.c
+ * 
+ * 
+ * 
+ */ 
 #include <stdio.h>
 #include <sys/mman.h>
 #include <sys/stat.h>  
@@ -8,25 +14,25 @@
 #include <string.h>
 #include <unistd.h>
 #include <signal.h>
-#include "util.h"
+#include "common.h"
 
-static int shmfd = -1;
-sem_t *free_sem, *used_sem, *mutex;
-struct circ_buf *cbuf;
-struct edge *E, *sol;
 int *perm;
 char *prog;
+struct circ_buf *buf;
+static int shmfd = -1;
+struct edge *E, *solution;
+sem_t *free_sem, *used_sem, *mutex;
 
 void write_message(char *msg)
 {
     printf("[%s] %s\n", prog, msg);
 }
 
-void print_solution(struct edge *sol, int solsize)
+void print_solution(struct edge *solution, int solsize)
 {
     printf("[%s] solution with %d edges: ", prog, solsize);
     for (int i = 0; i < solsize; i++){
-        printf("%d-%d ", sol[i].u, sol[i].v);
+        printf("%d-%d ", solution[i].u, solution[i].v);
     }
     printf("\n");
 }
@@ -42,9 +48,9 @@ void allocate_resources(void)
     if ((shmfd = shm_open(SHM_NAME, O_RDWR | O_CREAT, 0600)) == -1)
         exit_error("shm_open failed");
 
-    cbuf = mmap(NULL, sizeof(*cbuf), PROT_READ | PROT_WRITE, MAP_SHARED, shmfd, 0);
+    buf = mmap(NULL, sizeof(*buf), PROT_READ | PROT_WRITE, MAP_SHARED, shmfd, 0);
 
-    if (cbuf == MAP_FAILED) exit_error("mmap failed");
+    if (buf == MAP_FAILED) exit_error("mmap failed");
 
     free_sem = sem_open(FREE_SEM, 0);
     if (free_sem == SEM_FAILED)
@@ -63,7 +69,7 @@ void free_resources(void)
 {
     fprintf(stdout, "[%s] free resources\n", prog);
     free(E);
-    if (munmap(cbuf, sizeof(*cbuf)) == -1) exit_error("munmap failed");
+    if (munmap(buf, sizeof(*buf)) == -1) exit_error("munmap failed");
     if (close(shmfd) == -1) exit_error("close failed");
     if (sem_close(free_sem) == -1) exit_error("sem_close failed");
     if (sem_close(mutex) == -1) exit_error("sem_close failed");
@@ -115,13 +121,13 @@ void fisher_yates_shuffle(int *a, int n)
     free(source);
 }
 
-int monte_carlo(struct edge *sol, int *perm, int nE)
+int monte_carlo(struct edge *solution, int *perm, int nE)
 {
-    memset(sol, 0, sizeof(struct edge) * MAX_SOLUTION_SIZE);
+    memset(solution, 0, sizeof(struct edge) * MAX_SOLUTION_SIZE);
     int solsize = 0;
     for (int i = 0; i < nE; i++){
         if (perm[E[i].u] > perm[E[i].v]){
-            sol[solsize++] = E[i];
+            solution[solsize++] = E[i];
         }
     }
     return solsize;
@@ -144,13 +150,13 @@ int main(int argc, char *argv[])
     nV++;
 
     perm = malloc(sizeof(int) * nV);
-    sol = malloc(sizeof(struct edge) * MAX_SOLUTION_SIZE);
+    solution = malloc(sizeof(struct edge) * MAX_SOLUTION_SIZE);
     
     int solsize = 0, min_solution = __INT_MAX__;
-    while (!cbuf->quit){
+    while (!buf->quit){
     
         fisher_yates_shuffle(perm, nV);
-        solsize = monte_carlo(sol, perm, nE);        
+        solsize = monte_carlo(solution, perm, nE);        
 //        printf("[%s] calculating...\n", prog); 
 
         if (solsize < min_solution && solsize <= MAX_SOLUTION_SIZE){ // <= causes lockup
@@ -161,12 +167,12 @@ int main(int argc, char *argv[])
 //            print_solution(sol, solsize);
  
             if (solsize > 0){
-                memcpy(cbuf->data[cbuf->write_pos], sol, sizeof(struct edge) * solsize);
+                memcpy(buf->data[buf->write_pos], solution, sizeof(struct edge) * solsize);
             }
-            cbuf->solution_size[cbuf->write_pos] = solsize;
+            buf->solution_size[buf->write_pos] = solsize;
 
             sem_post(used_sem);
-            cbuf->write_pos = (cbuf->write_pos + 1) % MAX_DATA;
+            buf->write_pos = (buf->write_pos + 1) % MAX_DATA;
             sem_wait(free_sem);
 
             sem_post(mutex);

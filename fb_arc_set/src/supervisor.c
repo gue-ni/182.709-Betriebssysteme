@@ -1,3 +1,9 @@
+/**
+ * @file supervisor.c
+ * 
+ * 
+ * 
+ */ 
 #include <stdio.h>
 #include <sys/mman.h>
 #include <sys/stat.h>  
@@ -9,19 +15,19 @@
 #include <string.h>
 #include <unistd.h>
 #include <signal.h>
-#include "util.h"
+#include "common.h"
 
 static int shmfd = -1;
 sem_t *free_sem, *used_sem;
 volatile sig_atomic_t quit = 0;
-struct circ_buf *cbuf;
+struct circ_buf *buf;
 char *prog;
 
-void print_solution(struct edge *sol, int solsize)
+void print_solution(struct edge *solution, int solsize)
 {
     printf("[%s] solution with %d edges: ", prog, solsize);
     for (int i = 0; i < solsize; i++){
-        printf("%d-%d ", sol[i].u, sol[i].v);
+        printf("%d-%d ", solution[i].u, solution[i].v);
     }
     printf("\n");
 }
@@ -52,7 +58,7 @@ void handle_signal(int s)
 {
     //write(0, "handle signal\n", 14);
     quit = 1;
-    cbuf->quit = 1;
+    buf->quit = 1;
 }
 
 void allocate_resources(void)
@@ -63,9 +69,9 @@ void allocate_resources(void)
     if (ftruncate(shmfd, sizeof(struct circ_buf)) < 0)
         exit_error("ftruncate failed");
 
-    cbuf = mmap(NULL, sizeof(*cbuf), PROT_READ | PROT_WRITE, MAP_SHARED, shmfd, 0);
+    buf = mmap(NULL, sizeof(*buf), PROT_READ | PROT_WRITE, MAP_SHARED, shmfd, 0);
 
-    if (cbuf == MAP_FAILED) exit_error("mmap failed");
+    if (buf == MAP_FAILED) exit_error("mmap failed");
 
     free_sem = sem_open(FREE_SEM, O_CREAT | O_EXCL, 0600, MAX_DATA);
     used_sem = sem_open(USED_SEM, O_CREAT | O_EXCL, 0600, 0);
@@ -85,7 +91,7 @@ void free_resources(void)
 {
     if (shmfd != -1){
         write_message("free resources\n");
-        if (munmap(cbuf, sizeof(*cbuf)) == -1) exit_error("munmap failed");
+        if (munmap(buf, sizeof(*buf)) == -1) exit_error("munmap failed");
         if (close(shmfd) == -1) exit_error("close failed");
         if (shm_unlink(SHM_NAME) == -1) exit_error("shm_unlink failed");
         if (sem_close(free_sem) == -1) exit_error("sem_close failed");
@@ -108,9 +114,9 @@ int main(int argc, char *argv[])
 
     allocate_resources();
 
-    cbuf->read_pos = 0;
-    cbuf->write_pos = 0;
-    cbuf->quit = 0;
+    buf->read_pos = 0;
+    buf->write_pos = 0;
+    buf->quit = 0;
     struct edge *solution = malloc(sizeof(struct edge) * MAX_SOLUTION_SIZE);
 
     int solsize, min_solution = 10000000;
@@ -123,20 +129,20 @@ int main(int argc, char *argv[])
             exit_error("something happended");
         }
             
-        solsize = cbuf->solution_size[cbuf->read_pos];
+        solsize = buf->solution_size[buf->read_pos];
 
         if (solsize < min_solution){
             if (solsize == 0){
                 printf("[%s] graph is acyclic!\n", prog);
             } else {
-                memcpy(solution, cbuf->data[cbuf->read_pos], solsize*sizeof(struct edge));
+                memcpy(solution, buf->data[buf->read_pos], solsize*sizeof(struct edge));
                 print_solution(solution, solsize);
             }
             min_solution = solsize;
         } 
         
         sem_post(free_sem);
-        cbuf->read_pos = (cbuf->read_pos + 1) % MAX_DATA;
+        buf->read_pos = (buf->read_pos + 1) % MAX_DATA;
     }
     return EXIT_SUCCESS;
 }

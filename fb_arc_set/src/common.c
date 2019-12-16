@@ -1,7 +1,10 @@
+/**
+ * @file common.c
+ */
 #include <stdio.h>
 #include <semaphore.h>
 #include <stdlib.h>
-#include "util.h"
+#include "common.h"
 
 void test(void)
 {
