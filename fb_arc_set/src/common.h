@@ -1,5 +1,8 @@
 /**
  * @file common.h
+ * @author Jakob G. Maier <e11809618@student.tuwien.ac.at>
+ * @date 2019-12-16
+ * @brief
  */
 #ifndef common_H__
 #define common_H__
@@ -12,11 +15,17 @@
 #define MAX_DATA            (256)
 #define MAX_SOLUTION_SIZE   (8)
 
+/**
+ *
+ */
 struct edge {
     int u;
     int v;
 };
 
+/**
+ *
+ */
 struct circ_buf {
     int read_pos;
     int write_pos;
@@ -25,5 +34,11 @@ struct circ_buf {
     struct edge data[MAX_DATA][MAX_SOLUTION_SIZE];
 };
 
-void test(void);
+/**
+ * @brief
+ * @details
+ * @param
+ * @return
+ */
+void exit_error(char *p, char *msg);
 #endif /* common_H__ */
