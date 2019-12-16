@@ -59,7 +59,7 @@ static void allocate_resources(void)
  */
 static void free_resources(void)
 {
-    fprintf(stdout, "[%s] free resources\n", prog);
+    //fprintf(stdout, "[%s] free resources\n", prog);
     free(edges);
     free(perm);
     free(solution);
