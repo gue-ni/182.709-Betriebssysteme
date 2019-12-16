@@ -21,4 +21,9 @@ forkFFT
 myexpand
 server
 client
+supervisor
+generator
+test
+
+
 

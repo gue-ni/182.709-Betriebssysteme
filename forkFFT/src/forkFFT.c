@@ -1,6 +1,6 @@
 /**
  * @file forkFFT.c
- * @author Jakob G. Maier <e11809618@student.tuwien.ac.at>
+ * @author Jakob G. Maier <e11809619@student.tuwien.ac.at>
  * @date 2019-12-11 
  * @brief
  */ 
@@ -29,7 +29,7 @@ void exit_error(char *msg)
 /**
  * @brief Used to check whether functions return the frequent error value of -1 
  **/
-void check_error(int v)
+static void check_error(int v)
 {
 	if (v == -1) exit_error("an error occured");
 }
