@@ -115,35 +115,28 @@ int main(int argc, char *argv[])
 
     int solsize, min_solution = 10000000;
     while(!quit){
-        //fprintf(stderr, "waiting to read...\n");
 
         if (sem_wait(used_sem) == -1){
             if (errno == EINTR){
-            //    fprintf(stderr, "[%s] sem_wait was interrupted\n", prog);
                 continue;
             }
-
             exit_error("something happended");
         }
             
         solsize = cbuf->solution_size[cbuf->read_pos];
-        memcpy(solution, cbuf->data[cbuf->read_pos], solsize*sizeof(struct edge));
 
         if (solsize < min_solution){
-            //printf("[%s] new best solution: %d\n", prog, solsize);
-            print_solution(solution, solsize);
+            if (solsize == 0){
+                printf("[%s] graph is acyclic!\n", prog);
+            } else {
+                memcpy(solution, cbuf->data[cbuf->read_pos], solsize*sizeof(struct edge));
+                print_solution(solution, solsize);
+            }
             min_solution = solsize;
-        } //else {
-            //print_solution(solution, solsize);
-        //}
+        } 
         
         sem_post(free_sem);
         cbuf->read_pos = (cbuf->read_pos + 1) % MAX_DATA;
-
-    
     }
-
-
-
     return EXIT_SUCCESS;
 }

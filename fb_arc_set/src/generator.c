@@ -13,7 +13,8 @@
 static int shmfd = -1;
 sem_t *free_sem, *used_sem, *mutex;
 struct circ_buf *cbuf;
-struct edge *E;
+struct edge *E, *sol;
+int *perm;
 char *prog;
 
 void write_message(char *msg)
@@ -28,8 +29,6 @@ void print_solution(struct edge *sol, int solsize)
         printf("%d-%d ", sol[i].u, sol[i].v);
     }
     printf("\n");
-
-
 }
 
 void exit_error(char *msg)
@@ -58,7 +57,6 @@ void allocate_resources(void)
     mutex = sem_open(MUTEX, O_CREAT, 0600, 1);
     if (mutex == SEM_FAILED)
         exit_error("mutex failed");
- 
 }
 
 void free_resources(void)
@@ -86,9 +84,7 @@ void parse_edge(struct edge *E, char *buf, int *m)
     E->u = strtol(buf, &endptr, 10);
     E->v = abs(strtol(endptr, NULL, 10));
     int local_max = max(E->u, E->v);
-    *m = *m < local_max ? local_max : *m;  
-    //fprintf(stdout, "[%s] converted %d-%d\n", prog, E->u, E->v);
-
+    *m = max(local_max, *m);
 }
 
 void gen_lookup(int *a, int *b, int n)
@@ -147,8 +143,8 @@ int main(int argc, char *argv[])
     }
     nV++;
 
-    int *perm = malloc(sizeof(int) * nV);
-    struct edge *sol = malloc(sizeof(struct edge) * MAX_SOLUTION_SIZE);
+    perm = malloc(sizeof(int) * nV);
+    sol = malloc(sizeof(struct edge) * MAX_SOLUTION_SIZE);
     
     int solsize = 0, min_solution = __INT_MAX__;
     while (!cbuf->quit){
@@ -157,14 +153,16 @@ int main(int argc, char *argv[])
         solsize = monte_carlo(sol, perm, nE);        
 //        printf("[%s] calculating...\n", prog); 
 
-        if (solsize < min_solution){ // <= causes lockup
+        if (solsize < min_solution && solsize <= MAX_SOLUTION_SIZE){ // <= causes lockup
             min_solution = solsize;
             sem_wait(mutex);
             
             sem_wait(free_sem);
 //            print_solution(sol, solsize);
  
-            memcpy(cbuf->data[cbuf->write_pos], sol, sizeof(struct edge) * solsize);
+            if (solsize > 0){
+                memcpy(cbuf->data[cbuf->write_pos], sol, sizeof(struct edge) * solsize);
+            }
             cbuf->solution_size[cbuf->write_pos] = solsize;
 
             sem_post(used_sem);
