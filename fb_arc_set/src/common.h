@@ -27,4 +27,3 @@ struct circ_buf {
 
 void test(void);
 #endif /* common_H__ */
-
