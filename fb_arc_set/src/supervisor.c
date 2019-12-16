@@ -107,7 +107,7 @@ void free_resources(void)
  * @brief
  * @details
  * @param
- * @return
+ * @return EXIT_SUCCESS
  */
 int main(int argc, char *argv[])
 {
