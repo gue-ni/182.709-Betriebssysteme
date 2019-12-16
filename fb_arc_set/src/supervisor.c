@@ -17,10 +17,15 @@ volatile sig_atomic_t quit = 0;
 struct circ_buf *cbuf;
 char *prog;
 
-void print_result(int value)
+void print_solution(struct edge *sol, int solsize)
 {
-    printf("[%s] %d\n", prog, value);
+    printf("[%s] solution with %d edges: ", prog, solsize);
+    for (int i = 0; i < solsize; i++){
+        printf("%d-%d ", sol[i].u, sol[i].v);
+    }
+    printf("\n");
 }
+
 void write_message(char *msg)
 {
     printf("[%s] %s\n", prog, msg);
@@ -45,8 +50,35 @@ int buf_read(int *buf, int *read_pos)
 
 void handle_signal(int s)
 {
-    write(0, "handle signal\n", 14);
+    //write(0, "handle signal\n", 14);
     quit = 1;
+    cbuf->quit = 1;
+}
+
+void allocate_resources(void)
+{
+    if ((shmfd = shm_open(SHM_NAME, O_RDWR | O_CREAT, 0600)) == -1)
+        exit_error("shm_open failed");
+
+    if (ftruncate(shmfd, sizeof(struct circ_buf)) < 0)
+        exit_error("ftruncate failed");
+
+    cbuf = mmap(NULL, sizeof(*cbuf), PROT_READ | PROT_WRITE, MAP_SHARED, shmfd, 0);
+
+    if (cbuf == MAP_FAILED) exit_error("mmap failed");
+
+    free_sem = sem_open(FREE_SEM, O_CREAT | O_EXCL, 0600, MAX_DATA);
+    used_sem = sem_open(USED_SEM, O_CREAT | O_EXCL, 0600, 0);
+    
+    free_sem = sem_open(FREE_SEM, 0);
+    if (free_sem == SEM_FAILED)
+        exit_error("free_sem failed");
+  
+    used_sem = sem_open(USED_SEM, 0);
+    if (used_sem == SEM_FAILED)
+        exit_error("used_sem failed");
+
+
 }
 
 void free_resources(void)
@@ -70,56 +102,48 @@ int main(int argc, char *argv[])
         exit_error("resources not freed");
     
     struct sigaction sa;
+    memset(&sa, 0, sizeof(sa));
     sa.sa_handler = handle_signal;
-    //struct sigaction sa = { .sa_hander = handle_signal; };
     sigaction(SIGINT, &sa, NULL);
 
-    if ((shmfd = shm_open(SHM_NAME, O_RDWR | O_CREAT, 0600)) == -1)
-        exit_error("shm_open failed");
-
-    if (ftruncate(shmfd, sizeof(struct circ_buf)) < 0)
-        exit_error("ftruncate failed");
-
-    cbuf = mmap(NULL, sizeof(*cbuf), PROT_READ | PROT_WRITE, MAP_SHARED, shmfd, 0);
-
-    if (cbuf == MAP_FAILED) exit_error("mmap failed");
-
-    free_sem = sem_open(FREE_SEM, O_CREAT | O_EXCL, 0600, MAX_DATA);
-    used_sem = sem_open(USED_SEM, O_CREAT | O_EXCL, 0600, 0);
-    
-    free_sem = sem_open(FREE_SEM, 0);
-    if (free_sem == SEM_FAILED)
-        exit_error("free_sem failed");
-  
-    used_sem = sem_open(USED_SEM, 0);
-    if (used_sem == SEM_FAILED)
-        exit_error("used_sem failed");
+    allocate_resources();
 
     cbuf->read_pos = 0;
     cbuf->write_pos = 0;
+    cbuf->quit = 0;
+    struct edge *solution = malloc(sizeof(struct edge) * MAX_SOLUTION_SIZE);
 
-    int value;
+    int solsize, min_solution = 10000000;
     while(!quit){
-        fprintf(stderr, "waiting to read...\n");
+        //fprintf(stderr, "waiting to read...\n");
 
         if (sem_wait(used_sem) == -1){
-            fprintf(stderr, "sem_wait was interrupted\n");
             if (errno == EINTR){
-                fprintf(stderr, "[%s] sem_wait was interrupted\n", prog);
+            //    fprintf(stderr, "[%s] sem_wait was interrupted\n", prog);
                 continue;
             }
 
             exit_error("something happended");
         }
-        write_message("reading...");
-        value = cbuf->data[cbuf->read_pos];
+            
+        solsize = cbuf->solution_size[cbuf->read_pos];
+        memcpy(solution, cbuf->data[cbuf->read_pos], solsize*sizeof(struct edge));
+
+        if (solsize < min_solution){
+            //printf("[%s] new best solution: %d\n", prog, solsize);
+            print_solution(solution, solsize);
+            min_solution = solsize;
+        } //else {
+            //print_solution(solution, solsize);
+        //}
+        
         sem_post(free_sem);
         cbuf->read_pos = (cbuf->read_pos + 1) % MAX_DATA;
 
-        write_message("read something");
-        print_result(value);
     
     }
+
+
 
     return EXIT_SUCCESS;
 }
