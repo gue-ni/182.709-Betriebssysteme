@@ -13,11 +13,11 @@
 #define FREE_SEM            "/fb_free"
 #define USED_SEM            "/fb_used"
 #define MUTEX               "/fb_mutex"
-#define MAX_DATA            (64)
+#define MAX_DATA            (50)
 #define MAX_SOLUTION_SIZE   (8)
 
 /**
- *
+ * u->v
  */
 struct edge {
     uint8_t u;
@@ -26,17 +26,17 @@ struct edge {
 
 /**
  * 
- * read_pos: read position on circular buffer
- * write_pos: write position on circular buffer
+ * rp: read position on circular buffer
+ * wp: write position on circular buffer
  * quit: generators exit when set to 1
- * solution_size: size of the solution written to the buffer, should not be larger than 8
+ * size: size of the solution written to the buffer, not be larger than 8
  * data: array containing the solutions 
  */
 struct circ_buf {
-    uint8_t read_pos;
-    uint8_t write_pos;
+    uint8_t rp;
+    uint8_t wp;
     volatile sig_atomic_t quit;
-    uint8_t solution_size[MAX_DATA];
+    uint8_t size[MAX_DATA];
     struct edge data[MAX_DATA][MAX_SOLUTION_SIZE];
 };
 

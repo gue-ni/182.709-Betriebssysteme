@@ -32,11 +32,11 @@ volatile sig_atomic_t quit = 0;
  * @param size
  * @return void
  */
-static void print_solution(struct edge *solution, int size)
+static void print_solution(struct edge *s, int size)
 {
     printf("[%s] Solution with %d edges: ", prog, size);
     for (int i = 0; i < size; i++){
-        printf("%d-%d ", solution[i].u, solution[i].v);
+        printf("%d-%d ", s[i].u, s[i].v);
     }
     printf("\n");
 }
@@ -152,8 +152,8 @@ int main(int argc, char *argv[])
 
     allocate_resources();
 
-    buf->read_pos   = 0;
-    buf->write_pos  = 0;
+    buf->rp   = 0;
+    buf->wp  = 0;
     buf->quit       = 0;
 
     struct edge *solution = malloc(sizeof(struct edge) * MAX_SOLUTION_SIZE);
@@ -169,20 +169,23 @@ int main(int argc, char *argv[])
             exit_error(prog, "something happended");
         }
             
-        solution_size = buf->solution_size[buf->read_pos];
+        solution_size = buf->size[buf->rp];
 
         if (solution_size < min_solution){
             if (solution_size == 0){
                 printf("[%s] graph is acyclic!\n", prog);
+
             } else {
-                memcpy(solution, buf->data[buf->read_pos], solution_size * sizeof(struct edge));
+                memcpy(solution, buf->data[buf->rp], solution_size * sizeof(struct edge));
                 print_solution(solution, solution_size);
             }
             min_solution = solution_size;
         } 
         
         sem_post(free_sem);
-        buf->read_pos = (buf->read_pos + 1) % MAX_DATA;
+        buf->rp = (buf->rp + 1) % MAX_DATA;
     }
+    free(solution);
+    printf("[%s] exited normally\n", prog);
     return EXIT_SUCCESS;
 }

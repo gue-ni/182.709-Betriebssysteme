@@ -16,11 +16,10 @@
 #include <signal.h>
 #include "common.h"
 
-static int *perm; 
 static char *prog;
 static struct circ_buf *buf;
 static int shmfd = -1;
-static struct edge *edges, *solution;
+static struct edge *edges;
 static sem_t *free_sem, *used_sem, *mutex;
 
 /**
@@ -60,9 +59,6 @@ static void allocate_resources(void)
 static void free_resources(void)
 {
     //fprintf(stdout, "[%s] free resources\n", prog);
-    free(edges);
-    free(perm);
-    free(solution);
     if (munmap(buf, sizeof(*buf)) == -1) 
         exit_error(prog, "munmap failed");
 
@@ -131,7 +127,8 @@ static int monte_carlo(struct edge *solution, int *perm, int n)
     memset(solution, 0, sizeof(struct edge) * MAX_SOLUTION_SIZE);
     int size = 0;
     for (int i = 0; i < n; i++){
-        if (size >= MAX_SOLUTION_SIZE){
+
+        if (size > MAX_SOLUTION_SIZE){
             return -1;
         }
 
@@ -151,6 +148,7 @@ static int monte_carlo(struct edge *solution, int *perm, int n)
 int main(int argc, char *argv[])
 {
     prog = argv[0];
+
     if (atexit(free_resources) != 0)
         exit_error(prog, "resources not freed");
 
@@ -165,13 +163,12 @@ int main(int argc, char *argv[])
         parse_edge(edges+(i-1), argv[i], &nV);
     }
     nV++;
-//    printf("number of vertices: %d, number of edges: %d\n", nV, nE);
 
-    perm  = malloc(sizeof(int) * nV);
+    int *perm  = malloc(sizeof(int) * nV);
     if (perm == NULL) 
         exit_error(prog, "malloc failed");
 
-    solution = malloc(sizeof(struct edge) * MAX_SOLUTION_SIZE);
+    struct edge *solution = malloc(sizeof(struct edge) * MAX_SOLUTION_SIZE);
     if (solution == NULL) 
         exit_error(prog, "malloc failed"); 
     
@@ -191,16 +188,19 @@ int main(int argc, char *argv[])
             sem_wait(free_sem);
  
             if (size > 0){
-                memcpy(buf->data[buf->write_pos], solution, sizeof(struct edge) * size);
+                memcpy(buf->data[buf->wp], solution, sizeof(struct edge) * size);
             }
             
-            buf->solution_size[buf->write_pos] = size;
+            buf->size[buf->wp] = size;
             sem_post(used_sem);
-            buf->write_pos = (buf->write_pos + 1) % MAX_DATA;
+            buf->wp = (buf->wp + 1) % MAX_DATA;
             sem_post(mutex);
 
         }
     }
+    free(perm);
+    free(solution);
+    free(edges);
+    printf("[%s] exited normally\n", prog);
     return EXIT_SUCCESS;
 }
-
