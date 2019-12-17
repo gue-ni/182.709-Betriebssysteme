@@ -13,7 +13,7 @@
 #define FREE_SEM            "/fb_free"
 #define USED_SEM            "/fb_used"
 #define MUTEX               "/fb_mutex"
-#define MAX_DATA            (50)
+#define MAX_DATA            (128)
 #define MAX_SOLUTION_SIZE   (8)
 
 /**
@@ -33,9 +33,9 @@ struct edge {
  * data: array containing the solutions 
  */
 struct circ_buf {
+    volatile sig_atomic_t quit;
     uint8_t rp;
     uint8_t wp;
-    volatile sig_atomic_t quit;
     uint8_t size[MAX_DATA];
     struct edge data[MAX_DATA][MAX_SOLUTION_SIZE];
 };

@@ -83,7 +83,11 @@ static void free_resources(void)
  * @param
  * @return
  */
-static int max(int x, int y){ return x > y ? x : y; }
+static int max(int x, int y)
+{ 
+
+    return x > y ? x : y; 
+}
 
 /**
  * @brief
@@ -149,39 +153,35 @@ int main(int argc, char *argv[])
 {
     prog = argv[0];
 
-    if (atexit(free_resources) != 0)
-        exit_error(prog, "resources not freed");
+    if (atexit(free_resources) != 0) exit_error(prog, "resources not freed");
 
     allocate_resources();
 
     int nV = 0, nE = argc - 1;
     edges = malloc(sizeof(struct edge) * nE);
-    if (edges == NULL) 
-        exit_error(prog, "malloc failed");
+    if (edges == NULL) exit_error(prog, "malloc failed");
     
     for (int i = 1; i < argc; ++i){
         parse_edge(edges+(i-1), argv[i], &nV);
     }
     nV++;
 
+    if (nV > 255 || nE > 255) exit_error(prog, "too many vertices or edges");
+
     int *perm  = malloc(sizeof(int) * nV);
-    if (perm == NULL) 
-        exit_error(prog, "malloc failed");
+    if (perm == NULL) exit_error(prog, "malloc failed");
 
     struct edge *solution = malloc(sizeof(struct edge) * MAX_SOLUTION_SIZE);
-    if (solution == NULL) 
-        exit_error(prog, "malloc failed"); 
+    if (solution == NULL) exit_error(prog, "malloc failed"); 
     
     int size = 0, min_solution = INT_MAX;
     while (!buf->quit){
     
         fisher_yates(perm, nV);
         size = monte_carlo(solution, perm, nE); 
-        if (size == -1) // solution is too large anyway
-            continue;       
+        if (size == -1) continue;
 
         if (size < min_solution && size <= MAX_SOLUTION_SIZE){ // <= causes lockup
-           
             min_solution = size;
             
             sem_wait(mutex);
@@ -195,9 +195,9 @@ int main(int argc, char *argv[])
             sem_post(used_sem);
             buf->wp = (buf->wp + 1) % MAX_DATA;
             sem_post(mutex);
-
         }
     }
+    
     free(perm);
     free(solution);
     free(edges);

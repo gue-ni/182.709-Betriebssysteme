@@ -2,8 +2,6 @@
  * @file supervisor.c
  * @author Jakob G. Maier <e11809618@student.tuwien.ac.at>
  * @date
- * 
- * 
  */ 
 #include <stdio.h>
 #include <sys/mman.h>
@@ -153,8 +151,8 @@ int main(int argc, char *argv[])
     allocate_resources();
 
     buf->rp   = 0;
-    buf->wp  = 0;
-    buf->quit       = 0;
+    buf->wp   = 0;
+    buf->quit = 0;
 
     struct edge *solution = malloc(sizeof(struct edge) * MAX_SOLUTION_SIZE);
     if (solution == NULL) exit_error(prog, "malloc failed");
@@ -163,9 +161,9 @@ int main(int argc, char *argv[])
 
     while(!quit){
         if (sem_wait(used_sem) == -1){
-            if (errno == EINTR){
+            if (errno == EINTR) 
                 continue;
-            }
+            
             exit_error(prog, "something happended");
         }
             
@@ -178,6 +176,7 @@ int main(int argc, char *argv[])
             } else {
                 memcpy(solution, buf->data[buf->rp], solution_size * sizeof(struct edge));
                 print_solution(solution, solution_size);
+
             }
             min_solution = solution_size;
         } 
@@ -185,6 +184,7 @@ int main(int argc, char *argv[])
         sem_post(free_sem);
         buf->rp = (buf->rp + 1) % MAX_DATA;
     }
+
     free(solution);
     printf("[%s] exited normally\n", prog);
     return EXIT_SUCCESS;
