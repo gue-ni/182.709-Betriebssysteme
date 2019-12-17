@@ -17,7 +17,7 @@
 #define MAX_SOLUTION_SIZE   (8)
 
 /**
- * u->v
+ * Represents an edge from u->v
  */
 struct edge {
     uint8_t u;
