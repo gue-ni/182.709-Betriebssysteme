@@ -16,5 +16,4 @@
 #define ODD 	(1)
 
 void exit_error(char *msg);
-void check_error(int v);
 #endif /* forkFFT_H__ */

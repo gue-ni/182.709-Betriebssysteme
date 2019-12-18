@@ -15,11 +15,11 @@
 #include "forkFFT.h"
 #include "childIO.h"
 
-char *prog = "<not defined>";
+char *prog = "<not defined>"; /** < program name used in error messages */
 
 /**
  * @brief Prints error message and exits with EXIT_FAILURE
- * @details Does not check anything and simply prints the msg
+ * @details Does not check anything and simply prints the error message
  * and exits with EXIT_FAILURE
  * @param msg Message to print
  * @return void
@@ -30,15 +30,6 @@ void exit_error(char *msg)
 	exit(EXIT_FAILURE);
 }
 
-/**
- * @brief Used to check whether functions return the frequent error value of -1 
- * @param v Possible error value
- * @return void
- **/
-void check_error(int v)
-{
-	if (v == -1) exit_error("an error occured");
-}
 
 /**
  * Program entry point.
@@ -61,10 +52,10 @@ int main(int argc, char *argv[])
 
 	int pid1, pid2;
 
-	check_error(pipe(even_R));
-	check_error(pipe(even_P));
-	check_error(pipe(odd_R));
-	check_error(pipe(odd_P));
+	if (pipe(even_R) == -1) exit_error("error opening pipe");
+	if (pipe(even_P) == -1) exit_error("error opening pipe");
+	if (pipe(odd_R) == -1) exit_error("error opening pipe");
+	if (pipe(odd_P) == -1) exit_error("error opening pipe");
 
 	char buf[BUFSIZE];
 	char buffer[2][BUFSIZE];
@@ -79,7 +70,7 @@ int main(int argc, char *argv[])
 
 		if ( n == 1){ 
 			pid1 = fork();
-			check_error(pid1);
+			if (pid1 == -1) exit_error("error forking");
 			if (pid1 == 0){ // child 1
 				close_both_ends(odd_P);
 				close_both_ends(odd_R);
@@ -87,7 +78,7 @@ int main(int argc, char *argv[])
 			} 
 
 			pid2 = fork();
-			check_error(pid2);
+			if (pid2 == -1) exit_error("error forking");
 			if (pid2 == 0){ // child 2 
 				close_both_ends(even_R);
 				close_both_ends(even_P);
