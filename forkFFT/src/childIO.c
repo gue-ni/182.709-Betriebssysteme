@@ -44,15 +44,7 @@ int read_child(int fd, float complex *R, int n)
 	}
 
 	free(buf);
-
-	if (read != n){
-		return -1;
-	} else {
-		return read;
-	}
-
-
-
+	return read == n ? read : -1;
 }
 
 /** Close both ends of pipe
@@ -63,7 +55,7 @@ int read_child(int fd, float complex *R, int n)
 void close_both_ends(int *fd)
 {
 	for (int i = 0; i < 2; i++){
-		if(close(fd[i]) == -1) exit_error("error closing");
+		if(close(fd[i]) == -1) exit_error("error closing");  
 	}
 }
 

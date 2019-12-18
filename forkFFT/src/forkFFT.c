@@ -2,7 +2,11 @@
  * @file forkFFT.c
  * @author Jakob G. Maier <e11809619@student.tuwien.ac.at>
  * @date 2019-12-11 
- * @brief
+ * @brief Calculate the Fast Fourier Transformation from floating point input values
+ * recursivly
+ * @details Number of input values must be a power of two, otherwise the programm exits with
+ * an error
+ * 
  */ 
 #include <stdio.h>
 #include <math.h>
@@ -30,7 +34,6 @@ void exit_error(char *msg)
 	exit(EXIT_FAILURE);
 }
 
-
 /**
  * Program entry point.
  * @brief Implements the Cooley-Tukey Fast Fourier Transform algorithm.
@@ -45,17 +48,17 @@ void exit_error(char *msg)
 int main(int argc, char *argv[])
 {
 	prog = argv[0];
-	int even_R[2];
-	int even_P[2];
-	int odd_R[2];
-	int odd_P[2];
+	int even_out[2];
+	int even_in[2];
+	int odd_out[2];
+	int odd_in[2];
 
 	int pid1, pid2;
 
-	if (pipe(even_R) == -1) exit_error("error opening pipe");
-	if (pipe(even_P) == -1) exit_error("error opening pipe");
-	if (pipe(odd_R) == -1) exit_error("error opening pipe");
-	if (pipe(odd_P) == -1) exit_error("error opening pipe");
+	if (pipe(even_out) == -1) exit_error("error opening pipe");
+	if (pipe(even_in) == -1) exit_error("error opening pipe");
+	if (pipe(odd_out) == -1) exit_error("error opening pipe");
+	if (pipe(odd_in) == -1) exit_error("error opening pipe");
 
 	char buf[BUFSIZE];
 	char buffer[2][BUFSIZE];
@@ -72,37 +75,37 @@ int main(int argc, char *argv[])
 			pid1 = fork();
 			if (pid1 == -1) exit_error("error forking");
 			if (pid1 == 0){ // child 1
-				close_both_ends(odd_P);
-				close_both_ends(odd_R);
-				create_child(even_P, even_R);
+				close_both_ends(odd_in);
+				close_both_ends(odd_out);
+				create_child(even_in, even_out);
 			} 
 
 			pid2 = fork();
 			if (pid2 == -1) exit_error("error forking");
 			if (pid2 == 0){ // child 2 
-				close_both_ends(even_R);
-				close_both_ends(even_P);
-				create_child(odd_P, odd_R);
+				close_both_ends(even_out);
+				close_both_ends(even_in);
+				create_child(odd_in, odd_out);
 			} 
 
-			if(close(even_P[OUTPUT]) == -1) exit_error("error closing");
-			if(close(odd_P[OUTPUT])  == -1) exit_error("error closing");
-			if(close(odd_R[INPUT])   == -1) exit_error("error closing");
-			if(close(even_R[INPUT])  == -1) exit_error("error closing");
+			if(close(even_in[OUTPUT]) == -1) exit_error("error closing");
+			if(close(odd_in[OUTPUT])  == -1) exit_error("error closing");
+			if(close(odd_out[INPUT])   == -1) exit_error("error closing");
+			if(close(even_out[INPUT])  == -1) exit_error("error closing");
 		}
 
 		if ( n % 2 != 0){ // at least two values have been read
-			if (write(odd_P[INPUT],  buffer[ODD], strlen(buffer[ODD])) == -1)
+			if (write(odd_in[INPUT],  buffer[ODD], strlen(buffer[ODD])) == -1)
 				exit_error("error writing");
 
-			if (write(even_P[INPUT], buffer[EVEN], strlen(buffer[EVEN])) == -1)
+			if (write(even_in[INPUT], buffer[EVEN], strlen(buffer[EVEN])) == -1)
 				exit_error("error writing");
 		}
 		n++;
 	}
 
-	if (close(even_P[INPUT]) == -1) exit_error("error closing"); 
-	if (close(odd_P[INPUT]) == -1) exit_error("error closing"); 
+	if (close(even_in[INPUT]) == -1) exit_error("error closing"); 
+	if (close(odd_in[INPUT]) == -1) exit_error("error closing"); 
 
 	if (n == 0){
 		exit_error("Did not read anything");
@@ -128,8 +131,10 @@ int main(int argc, char *argv[])
 	if (R_e == NULL)
 		exit_error("malloc failed");
 
-	read_child(even_R[OUTPUT], R_e, n/2);
-	if(close(even_R[OUTPUT]) == -1) 
+	if (read_child(even_out[OUTPUT], R_e, n/2) == -1) 
+		exit_error("read_child failed");
+
+	if(close(even_out[OUTPUT]) == -1) 
 		exit_error("error closing");
 
 	// read from odd child
@@ -137,8 +142,9 @@ int main(int argc, char *argv[])
 	if (R_o == NULL) 
 		exit_error("malloc failed");
 
-	read_child(odd_R[OUTPUT], R_o, n/2);
-	if(close(odd_R[OUTPUT]) == -1) 
+	if (read_child(odd_out[OUTPUT], R_o, n/2) == -1) 
+		exit_error("read_child failed");
+	if(close(odd_out[OUTPUT]) == -1) 
 		exit_error("error closing");
 
 	// perform "butterfly operation"	
