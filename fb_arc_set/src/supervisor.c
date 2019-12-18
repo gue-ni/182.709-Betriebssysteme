@@ -160,6 +160,9 @@ int main(int argc, char *argv[])
     int solution_size, min_solution = INT_MAX;
     int free, used;
     while(!quit){
+        /* TODO remove */
+
+
         if (sem_wait(used_sem) == -1){
             if (errno == EINTR) 
                 continue;
@@ -169,9 +172,10 @@ int main(int argc, char *argv[])
             
         solution_size = buf->size[buf->rp];
 
-        /* TODO remove */
         sem_getvalue(free_sem, &free);
         sem_getvalue(used_sem, &used);
+       
+        /* TODO remove */
         printf("[%s] solution %d, wp: %2d, rp: %2d, free: %d, used: %d\n", 
             prog, solution_size, buf->wp, buf->rp, free, used);
 

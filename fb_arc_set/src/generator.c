@@ -235,7 +235,7 @@ int main(int argc, char *argv[])
             sem_wait(mutex);
             sem_wait(free_sem);
             
-            printf("[%s %d]  possible solution: %d\n", prog, getpid(), size); 
+            //printf("[%s %d]  possible solution: %d\n", prog, getpid(), size); 
             if (size > 0){
                 memcpy(buf->data[buf->wp], solution, sizeof(struct edge) * size);
             }
