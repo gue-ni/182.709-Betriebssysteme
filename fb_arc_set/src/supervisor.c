@@ -172,7 +172,6 @@ int main(int argc, char *argv[])
         if (solution_size < min_solution){
             if (solution_size == 0){
                 printf("[%s] graph is acyclic!\n", prog);
-                handle_signal(0); // TODO remove
 
             } else {
                 memcpy(solution, buf->data[buf->rp], solution_size * sizeof(struct edge));
@@ -187,6 +186,5 @@ int main(int argc, char *argv[])
     }
 
     free(solution);
-    printf("[%s] exited normally\n", prog);
     return EXIT_SUCCESS;
 }
