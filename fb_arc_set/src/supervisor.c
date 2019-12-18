@@ -154,11 +154,11 @@ int main(int argc, char *argv[])
     buf->wp   = 0;
     buf->quit = 0;
 
-    struct edge *solution = malloc(sizeof(struct edge) * MAX_SOLUTION_SIZE);
+    struct edge solution[MAX_SOLUTION_SIZE];
     if (solution == NULL) exit_error(prog, "malloc failed");
 
     int solution_size, min_solution = INT_MAX;
-
+    int free, used;
     while(!quit){
         if (sem_wait(used_sem) == -1){
             if (errno == EINTR) 
@@ -168,6 +168,13 @@ int main(int argc, char *argv[])
         }
             
         solution_size = buf->size[buf->rp];
+
+        /* TODO remove */
+        sem_getvalue(free_sem, &free);
+        sem_getvalue(used_sem, &used);
+        printf("[%s] solution %d, wp: %2d, rp: %2d, free: %d, used: %d\n", 
+            prog, solution_size, buf->wp, buf->rp, free, used);
+
 
         if (solution_size < min_solution){
             if (solution_size == 0){
@@ -185,6 +192,5 @@ int main(int argc, char *argv[])
         buf->rp = (buf->rp + 1) % MAX_DATA;
     }
 
-    free(solution);
     return EXIT_SUCCESS;
 }

@@ -202,6 +202,7 @@ int main(int argc, char *argv[])
     if (atexit(free_resources) != 0) exit_error(prog, "resources not freed");
 
     allocate_resources();
+    struct edge solution[MAX_SOLUTION_SIZE];
 
     int nV = 0, nE = argc - 1;
     edges = malloc(sizeof(struct edge) * nE);
@@ -217,29 +218,30 @@ int main(int argc, char *argv[])
     int *lookup = malloc(sizeof(int) * nV);
     int *perm   = malloc(sizeof(int) * nV);
     if (perm == NULL) exit_error(prog, "malloc failed");
-
-    struct edge solution[MAX_SOLUTION_SIZE];
+    if (lookup == NULL) exit_error(prog, "malloc failed");
     
     int size = 0, min_solution = INT_MAX;
     while (!buf->quit){
-    
+
         fisher_yates_v3(perm, lookup, nV);
-//        generate_lookup(perm, nV);
-//        fisher_yates(perm, nV);
         size = monte_carlo(solution, lookup, nE); 
-        if (size == -1) continue; // solution is too large anyway
+
+        if (size == -1) 
+            continue; // solution is too large anyway
 
         if (size < min_solution && size <= MAX_SOLUTION_SIZE){ // <= causes lockup
             min_solution = size;
             
             sem_wait(mutex);
             sem_wait(free_sem);
- 
+            
+            printf("[%s %d]  possible solution: %d\n", prog, getpid(), size); 
             if (size > 0){
                 memcpy(buf->data[buf->wp], solution, sizeof(struct edge) * size);
             }
-            
+
             buf->size[buf->wp] = size;
+
             sem_post(used_sem);
             buf->wp = (buf->wp + 1) % MAX_DATA;
             sem_post(mutex);
@@ -249,5 +251,6 @@ int main(int argc, char *argv[])
     free(perm);
     free(edges);
     free(lookup);
+    fprintf(stderr, "[%s] exited\n", prog);
     return EXIT_SUCCESS;
 }
