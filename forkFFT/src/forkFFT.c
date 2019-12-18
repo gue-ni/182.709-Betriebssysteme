@@ -19,6 +19,10 @@ char *prog = "<not defined>";
 
 /**
  * @brief Prints error message and exits with EXIT_FAILURE
+ * @details Does not check anything and simply prints the msg
+ * and exits with EXIT_FAILURE
+ * @param msg Message to print
+ * @return void
  **/
 void exit_error(char *msg)
 {
@@ -28,8 +32,10 @@ void exit_error(char *msg)
 
 /**
  * @brief Used to check whether functions return the frequent error value of -1 
+ * @param v Possible error value
+ * @return void
  **/
-static void check_error(int v)
+void check_error(int v)
 {
 	if (v == -1) exit_error("an error occured");
 }
@@ -39,7 +45,8 @@ static void check_error(int v)
  * @brief Implements the Cooley-Tukey Fast Fourier Transform algorithm.
  * Recursivly calls itself and aplies the "butterfly operation" to calculate 
  * the Fourier Transform 
- * @details
+ * @details Uses 4 pipes to communicate with its two children respectivly.
+ * Recursive call is only performed if two or more input values are read.
  * @param argc The argument counter
  * @param argv The argument vector
  * @return returns EXIT_SUCCESS

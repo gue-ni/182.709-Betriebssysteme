@@ -16,12 +16,14 @@
 #include "forkFFT.h"
 
 /**
- * @brief reads n complex numbers from filedescriptor and stores them in R
- * @param fd filedescriptor to read from
- * @param R array to store the complex numbers received
- * @param n number of numbers to read
+ * @brief Reads n complex numbers from filedescriptor and stores them in R
+ * @details Reads and parses complex numbers from fd and stores to R
+ * @param fd Filedescriptor to read from
+ * @param R Array to store the complex numbers received
+ * @param n Number of numbers to read
+ * @return Amount of numbers read, -1 on error
  */ 
-void read_child(int fd, float complex *R, int n)
+int read_child(int fd, float complex *R, int n)
 {
 	size_t s = sizeof(char) * n * 22; // 22 is the max char length a complex number can have
 	char *buf = malloc(s);
@@ -31,19 +33,31 @@ void read_child(int fd, float complex *R, int n)
 	
 	float a, b;
 	char *endptr = buf;
+	int read = 0;
 	
 	for (int i = 0; i < n; i++){
 		a = strtof(endptr, &endptr);
 		b = strtof(endptr, &endptr);
 		endptr += 3; // cut of "*i \n"
 		R[i] = a + b*I;
+		read++;
 	}
 
 	free(buf);
+
+	if (read != n){
+		return -1;
+	} else {
+		return read;
+	}
+
+
+
 }
 
-/**
+/** Close both ends of pipe
  * @brief close both ends of an unnamed pipe
+ * @details close both ends or exit with error if an error occurs
  * @param int array that contains two filedescriptors
  */
 void close_both_ends(int *fd)
@@ -53,7 +67,7 @@ void close_both_ends(int *fd)
 	}
 }
 
-/**
+/** Duplicate stdin and stdout and call ./forkFFT
  * @brief redirect two filedescriptors to stdin and stdout 
  * respectivly and execute ./forkFFT recursivly
  * @details read end of P will be redirected to stdin, write end of R to stdout 
