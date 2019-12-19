@@ -180,7 +180,7 @@ int main(int argc, char *argv[])
     if (perm == NULL) exit_error(prog, "malloc failed");
     if (lookup == NULL) exit_error(prog, "malloc failed");
     
-    srand(time(NULL)); // seed random number generator
+    srand(getpid()); // seed random number generator
 
     int size = 0, min_solution = INT_MAX;
     while (!buf->quit){
