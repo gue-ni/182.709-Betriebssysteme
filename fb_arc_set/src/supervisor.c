@@ -163,7 +163,6 @@ int main(int argc, char *argv[])
         if (sem_wait(used_sem) == -1){
             if (errno == EINTR) 
                 continue;
-            
             exit_error(prog, "something happended");
         }
             

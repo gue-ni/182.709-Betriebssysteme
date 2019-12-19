@@ -3,7 +3,6 @@
 
 case $1 in
 	0)
-		echo "kill"
 		kill -2 $(pidof supervisor)
 	;;
 
@@ -32,9 +31,6 @@ case $1 in
 		./supervisor &
 		(./generator 1-4 1-5 2-6 3-4 3-6 4-5 6-0 6-5 &)
 	;;
-
-
-
 
 	*)
 		echo "none" 

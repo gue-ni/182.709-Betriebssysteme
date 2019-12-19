@@ -171,10 +171,12 @@ int main(int argc, char *argv[])
     }
     nV++;
 
-    if (nV > 255 || nE > 255) exit_error(prog, "too many vertices or edges");
+    if (nV > 255 || nE > 255) 
+        exit_error(prog, "too many vertices or edges");
 
     int *lookup = malloc(sizeof(int) * nV);
     int *perm   = malloc(sizeof(int) * nV);
+
     if (perm == NULL) exit_error(prog, "malloc failed");
     if (lookup == NULL) exit_error(prog, "malloc failed");
     
