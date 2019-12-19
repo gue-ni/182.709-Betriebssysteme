@@ -84,13 +84,17 @@ static void allocate_resources(void)
     free_sem = sem_open(FREE_SEM, O_CREAT | O_EXCL, 0600, MAX_DATA);
     used_sem = sem_open(USED_SEM, O_CREAT | O_EXCL, 0600, 0);
     
+    
     free_sem = sem_open(FREE_SEM, 0);
     if (free_sem == SEM_FAILED) 
         exit_error(prog, "free_sem failed");
-  
+     
     used_sem = sem_open(USED_SEM, 0);
     if (used_sem == SEM_FAILED) 
         exit_error(prog, "used_sem failed");
+
+
+
 }
 
 /**
