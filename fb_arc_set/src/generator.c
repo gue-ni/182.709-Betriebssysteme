@@ -13,7 +13,6 @@
 #include <limits.h>
 #include <string.h>
 #include <unistd.h>
-#include <signal.h>
 #include "common.h"
 
 static char *prog; /** < */
@@ -39,15 +38,15 @@ static void allocate_resources(void)
 
     free_sem = sem_open(FREE_SEM, 0);
     if (free_sem == SEM_FAILED)
-        exit_error(prog, "free_sem failed");
+        exit_error(prog, "sem_open (free_sem) failed");
   
     used_sem = sem_open(USED_SEM, 0);
     if (used_sem == SEM_FAILED)
-        exit_error(prog, "used_sem failed");
+        exit_error(prog, "sem_open (used_sem) failed");
    
     mutex = sem_open(MUTEX, O_CREAT, 0600, 1);
     if (mutex == SEM_FAILED)
-        exit_error(prog, "mutex failed");
+        exit_error(prog, "sem_open (mutex) failed");
 }
 
 /**

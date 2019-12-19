@@ -14,7 +14,6 @@
 #include <string.h>
 #include <unistd.h>
 #include <limits.h>
-#include <signal.h>
 #include "common.h"
 
 static char *prog;
