@@ -103,16 +103,6 @@ static void parse_edge(struct edge *edge, char *buf, int *m)
     *m = max(max(edge->u, edge->v), *m); 
 }
 
-static void generate_lookup(int *a, int n)
-{
-    int *b = malloc(sizeof(int) * n);
-    memcpy(b, a, n * sizeof(int));
-
-    for (int i = 0; i < n; i++){
-        a[b[i]] = i;
-    }
-    free(b);
-}
 
 /** Shuffle vertices with Fisher-Yates algorithm
  * @brief shuffle vertices
@@ -121,7 +111,7 @@ static void generate_lookup(int *a, int n)
  * @param n size of array
  * @return void
  */
-static void fisher_yates(int *a, int n)
+static void fisher_yates(int *a, int *l, int n)
 {
     int j = 0;
     for (int i = 0; i < n; i++){
@@ -129,38 +119,6 @@ static void fisher_yates(int *a, int n)
         a[i] = a[j];
         a[j] = i;
     }
-}
-
-static void fisher_yates_v3(int *a, int *l, int n)
-{
-    int j = 0;
-    for (int i = 0; i < n; i++){
-        j = rand() % (i+1);
-        a[i] = a[j];
-        a[j] = i;
-    }
-    for (int i = 0; i < n; i++){
-        l[a[i]] = i;
-    }
-}
-
-static void fisher_yates_v2(int *a, int *l, int n)
-{
-    int *s = malloc(sizeof(int) * n);
-    memcpy(s, a, sizeof(int)*n);
-
-    if (memcmp(s, a, sizeof(int)*n) != 0)
-        exit_error(prog, "did not memcpy");
- 
-    int j = 0;
-    for (int i = 0; i < n; i++){
-        j = rand() % (i+1);
-        if (j != i)
-            a[i] = a[j];
-        a[j] = s[i];
-    }
-    free(s);
-
     for (int i = 0; i < n; i++){
         l[a[i]] = i;
     }
@@ -223,7 +181,7 @@ int main(int argc, char *argv[])
     int size = 0, min_solution = INT_MAX;
     while (!buf->quit){
 
-        fisher_yates_v3(perm, lookup, nV);
+        fisher_yates(perm, lookup, nV);
         size = monte_carlo(solution, lookup, nE); 
 
         if (size == -1) 
@@ -234,8 +192,7 @@ int main(int argc, char *argv[])
             
             sem_wait(mutex);
             sem_wait(free_sem);
-            
-            //printf("[%s %d]  possible solution: %d\n", prog, getpid(), size); 
+
             if (size > 0){
                 memcpy(buf->data[buf->wp], solution, sizeof(struct edge) * size);
             }
@@ -251,6 +208,5 @@ int main(int argc, char *argv[])
     free(perm);
     free(edges);
     free(lookup);
-    fprintf(stderr, "[%s] exited\n", prog);
     return EXIT_SUCCESS;
 }

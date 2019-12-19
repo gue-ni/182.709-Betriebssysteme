@@ -40,6 +40,7 @@ struct circ_buf {
     struct edge data[MAX_DATA][MAX_SOLUTION_SIZE];
 };
 
+
 /**
  * @brief
  * @details
