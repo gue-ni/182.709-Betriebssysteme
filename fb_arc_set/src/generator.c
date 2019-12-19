@@ -16,11 +16,11 @@
 #include <signal.h>
 #include "common.h"
 
-static char *prog;
-static struct circ_buf *buf;
-static int shmfd = -1;
-static struct edge *edges;
-static sem_t *free_sem, *used_sem, *mutex;
+static char *prog; /** < */
+static struct circ_buf *buf; /** < */
+static int shmfd = -1;/** < */
+static struct edge *edges;/** < */
+static sem_t *free_sem, *used_sem, *mutex; /** < */
 
 /**
  * @brief
