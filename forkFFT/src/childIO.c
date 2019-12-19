@@ -3,6 +3,7 @@
  * @author Jakob G. Maier <e11809618@student.tuwien.ac.at>
  * @date 2019-12-11 
  * @brief utility functions for communication with child processes 
+ * @details
  */ 
 #include <math.h>
 #include <stdio.h>
@@ -15,9 +16,9 @@
 #include "childIO.h"
 #include "forkFFT.h"
 
-/**
+/** Read complex values from fd
  * @brief Reads n complex numbers from filedescriptor and stores them in R
- * @details Reads and parses complex numbers from fd and stores to R
+ * @details Read and parse complex numbers from fd and stores to R
  * @param fd Filedescriptor to read from
  * @param R Array to store the complex numbers received
  * @param n Number of numbers to read
@@ -51,6 +52,7 @@ int read_child(int fd, float complex *R, int n)
  * @brief close both ends of an unnamed pipe
  * @details close both ends or exit with error if an error occurs
  * @param int array that contains two filedescriptors
+ * @return void
  */
 void close_both_ends(int *fd)
 {
@@ -65,6 +67,7 @@ void close_both_ends(int *fd)
  * @details read end of P will be redirected to stdin, write end of R to stdout 
  * @param P int array containing a pipe
  * @param R int array containing a pipe
+ * @return void
  */
 void create_child(int *P, int *R)
 {
