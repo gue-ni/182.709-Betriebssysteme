@@ -27,10 +27,13 @@
 int read_child(int fd, float complex *R, int n)
 {
 	size_t s = sizeof(char) * n * 22; // 22 is the max char length a complex number can have
+	
 	char *buf = malloc(s);
-	if (buf == NULL) exit_error("malloc failed");
+	if (buf == NULL) 
+		exit_error("malloc failed");
 
-	if (read(fd, buf, s) == -1) exit_error("error reading");
+	if (read(fd, buf, s) == -1) 
+		exit_error("error reading");
 	
 	float a, b;
 	char *endptr = buf;
@@ -57,7 +60,8 @@ int read_child(int fd, float complex *R, int n)
 void close_both_ends(int *fd)
 {
 	for (int i = 0; i < 2; i++){
-		if(close(fd[i]) == -1) exit_error("error closing");  
+		if(close(fd[i]) == -1) 
+			exit_error("error closing");  
 	}
 }
 

@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
 
 	if (read_child(odd_out[OUTPUT], R_o, n/2) == -1) 
 		exit_error("read_child failed");
-	
+
 	if(close(odd_out[OUTPUT]) == -1) 
 		exit_error("error closing");
 
@@ -158,6 +158,7 @@ int main(int argc, char *argv[])
 	for (int k = 0; k < n/2; k++){
 		x = (-(2 * PI) / n) * k;
 		exp = cos(x) + sin(x)*I;
+		fprintf(stderr, "k: %d, n: %d, x: %f, exp: %f %f*i\n", k, n, x, crealf(exp), cimagf(exp));
 		
 		R[k] 		= R_e[k] + exp * R_o[k];
 		R[k+n/2] 	= R_e[k] - exp * R_o[k];
@@ -167,7 +168,7 @@ int main(int argc, char *argv[])
 	free(R_o);
 
 	for (int i = 0; i < n; i++){
-		fprintf(stdout, "%f %f*i\n", creal(R[i]), cimag(R[i]));
+		fprintf(stdout, "%f %f*i\n", crealf(R[i]), cimagf(R[i]));
 	}
 
 	free(R);
