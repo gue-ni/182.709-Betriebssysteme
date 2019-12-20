@@ -2,7 +2,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <time.h>
-#define BILLION 1E9
 
 int main( int argc, char *argv[])
 {
@@ -12,9 +11,11 @@ int main( int argc, char *argv[])
 
 	clock_gettime(CLOCK_REALTIME, &start);
 
-	int fac = 0;
-	for (int e = 0; e < 1E6; e++){
-		for (int i = 1; i < 100; i++){
+	long int fac;
+
+	for (int e = 0; e < 1E7; e++){
+		fac = 1;
+		for (int i = 1; i < 10; i++){
 			fac *= i;
 		}
 
@@ -24,7 +25,8 @@ int main( int argc, char *argv[])
 
 	accum = ( stop.tv_sec - start.tv_sec )
           + ( stop.tv_nsec - start.tv_nsec )
-            / BILLION;
+            / 1E9;
+
     printf( "%lf\n", accum );
 
 
