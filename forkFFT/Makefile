@@ -9,7 +9,6 @@ LFLAGS = -lm
 PROGS = forkFFT 
 DEPS = childIO 
 
-
 .PHONY: all clean 
 
 all: $(PROGS)
@@ -22,7 +21,6 @@ $(PROGS): % : %.o $(DEPS:=.o)
 
 forkFFT.o: forkFFT.c forkFFT.h
 childIO.o: childIO.c forkFFT.h
-test.o: test.c
 
 clean:
 	rm -rf *.o $(PROGS)
