@@ -2,4 +2,3 @@
 UE Betriebsysteme
 
 `tar -cvzf <archive-filename>.tgz <sources>`
-

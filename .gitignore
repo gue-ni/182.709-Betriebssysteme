@@ -17,10 +17,8 @@ ex0/
 exam1/
 testing/
 .vscode/
-bin/
+
+
+
 
 # Executables
-./personal/fork_test
-./personal/b64
-./ex3/src/run.sh
-./ex1b/run_test.sh
