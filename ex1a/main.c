@@ -15,12 +15,10 @@ void usage(char *myprog)
 
 FILE *opn_str(char *f_name, int fd, const char *mode)
 {
-	if (f_name)
-	{
+	if (f_name){
 		return fopen(f_name, mode);
 
-	} else 
-	{
+	} else {
 		return fdopen(fd, mode);
 	}
 }
@@ -33,10 +31,8 @@ int main(int argc, char *argv[])
 	int tabstop = 8;
 
 	// reads in command line arguments
-	while( (c = getopt(argc, argv, "t:o:h")) != -1 )
-	{
-		switch( c )
-		{
+	while( (c = getopt(argc, argv, "t:o:h")) != -1 ){
+		switch( c ){
 			case 't':
 				tabstop = (int) strtol(optarg, NULL, 0);
 				break;
@@ -57,8 +53,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (optind > argc-2)
-	{
+	if (optind > argc-2){
 		inputfile = argv[optind];
 	}
 
@@ -69,23 +64,13 @@ int main(int argc, char *argv[])
 	out_fp = opn_str(outfile, STDOUT_FILENO, "w");
 	in_fp = opn_str(inputfile, STDIN_FILENO, "r");
 
-	int next_c;
 
 	if (in_fp) {
 
-		while ( (c = fgetc(in_fp) ) != EOF )
-		{
-			if ( c == '\\' ){
-				if ( (next_c = fgetc(in_fp) ) == 't') // check for \t
-				{
-					for (int i = 0; i < tabstop; ++i)
-					{
-						fputc(' ', out_fp);
-					}
-					
-				} else { // just a random backslash
-					fputc(c, out_fp);
-					fputc(next_c, out_fp);
+		while ( (c = fgetc(in_fp) ) != EOF ){
+			if ( c == '\t' ){
+				for (int i = 0; i < tabstop; ++i){
+					fputc(' ', out_fp);
 				}
 			} else {
 				fputc(c, out_fp);
