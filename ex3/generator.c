@@ -157,7 +157,8 @@ int main(int argc, char *argv[])
 {
     prog = argv[0];
 
-    if (atexit(free_resources) != 0) exit_error(prog, "resources not freed");
+    if (atexit(free_resources) != 0) 
+        exit_error(prog, "resources not freed");
 
     allocate_resources();
     struct edge solution[MAX_SOLUTION_SIZE];
@@ -177,8 +178,11 @@ int main(int argc, char *argv[])
     int *lookup = malloc(sizeof(int) * nV);
     int *perm   = malloc(sizeof(int) * nV);
 
-    if (perm == NULL) exit_error(prog, "malloc failed");
-    if (lookup == NULL) exit_error(prog, "malloc failed");
+    if (perm == NULL) 
+        exit_error(prog, "malloc failed");
+
+    if (lookup == NULL) 
+        exit_error(prog, "malloc failed");
     
     srand(getpid()); // seed random number generator
 

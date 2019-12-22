@@ -7,14 +7,10 @@ LFLAGS 	= -lrt -pthread
 
 PROGS 	= supervisor generator 
 DEPS 	= common
-BINPATH = ../bin/
 
-.PHONY: all clean install
+.PHONY: all clean 
 
 all: $(PROGS)
-
-install: all
-	mv $(PROGS) $(BINPATH)
 
 $(PROGS): %: %.o $(DEPS:=.o)
 	$(CC) -o $@ $^ $(LFLAGS)

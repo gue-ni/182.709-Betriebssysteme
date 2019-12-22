@@ -9,7 +9,7 @@
 
 #include <signal.h>
 #include <stdint.h>
-#define SHM_NAME            "/shared"
+#define SHM_NAME            "/shared_mem"
 #define FREE_SEM            "/fb_free"
 #define USED_SEM            "/fb_used"
 #define MUTEX               "/fb_mutex"
