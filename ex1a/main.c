@@ -64,7 +64,6 @@ int main(int argc, char *argv[])
 	out_fp = opn_str(outfile, STDOUT_FILENO, "w");
 	in_fp = opn_str(inputfile, STDIN_FILENO, "r");
 
-
 	if (in_fp) {
 
 		while ( (c = fgetc(in_fp) ) != EOF ){
