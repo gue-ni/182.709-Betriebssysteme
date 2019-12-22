@@ -10,21 +10,18 @@
 *.html
 *.sh
 *.txt
+*.pdf
 
 # Directories
 exercise1-examples/
 exam1/
 testing/
 kernel/
+.vscode/
+bin/
 
 # Executables
-#forkFFT
-#myexpand
-#server
-#client
-#supervisor
-#generator
-#test
-
-
-
+./personal/fork_test
+./personal/b64
+./ex3/src/run.sh
+./ex1b/run_test.sh
