@@ -106,7 +106,6 @@ static void allocate_resources(void)
 static void free_resources(void)
 {
     if (shmfd != -1){
-        // printf("[%s] free resources\n", prog);
         if (munmap(buf, sizeof(*buf)) == -1) 
             exit_error(prog, "munmap failed");
 

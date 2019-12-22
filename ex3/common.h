@@ -25,7 +25,6 @@ struct edge {
 };
 
 /**
- * 
  * rp: read position on circular buffer
  * wp: write position on circular buffer
  * quit: generators exit when set to 1

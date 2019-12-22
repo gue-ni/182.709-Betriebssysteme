@@ -176,9 +176,9 @@ int main(int argc, char *argv[])
         exit_error(prog, "too many vertices or edges");
 
     int *lookup = malloc(sizeof(int) * nV);
-    int *perm   = malloc(sizeof(int) * nV);
+    int *permutation   = malloc(sizeof(int) * nV);
 
-    if (perm == NULL) 
+    if (permutation == NULL) 
         exit_error(prog, "malloc failed");
 
     if (lookup == NULL) 
@@ -189,7 +189,7 @@ int main(int argc, char *argv[])
     int size = 0, min_solution = INT_MAX;
     while (!buf->quit){
 
-        fisher_yates(perm, lookup, nV);
+        fisher_yates(permutation, lookup, nV);
         size = monte_carlo(solution, lookup, nE); 
 
         if (size == -1) 
@@ -213,7 +213,7 @@ int main(int argc, char *argv[])
         }
     }
     
-    free(perm);
+    free(permutation);
     free(edges);
     free(lookup);
     return EXIT_SUCCESS;
