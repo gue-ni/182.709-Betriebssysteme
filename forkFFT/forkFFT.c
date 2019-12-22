@@ -1,7 +1,7 @@
 /**
  * @file forkFFT.c
  * @author Jakob G. Maier <e11809619@student.tuwien.ac.at>
- * @date 2019-12-11 
+ * @date 2019-12-22 
  * @brief Calculate the Fast Fourier Transformation from floating point input values
  * recursivly
  * @details Number of input values must be a power of two, otherwise the programm exits with
@@ -158,7 +158,6 @@ int main(int argc, char *argv[])
 	for (int k = 0; k < n/2; k++){
 		x = (-(2 * PI) / n) * k;
 		exp = cos(x) + sin(x)*I;
-		fprintf(stderr, "k: %d, n: %d, x: %f, exp: %f %f*i\n", k, n, x, crealf(exp), cimagf(exp));
 		
 		R[k] 		= R_e[k] + exp * R_o[k];
 		R[k+n/2] 	= R_e[k] - exp * R_o[k];

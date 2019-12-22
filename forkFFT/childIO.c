@@ -1,7 +1,7 @@
 /**
  * @file childIO.c
  * @author Jakob G. Maier <e11809618@student.tuwien.ac.at>
- * @date 2019-12-11 
+ * @date 2019-12-22 
  * @brief utility functions for communication with child processes 
  * @details 
  */ 

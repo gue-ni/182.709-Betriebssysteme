@@ -1,8 +1,9 @@
 /**
  * @file childIO.h
  * @author Jakob G. Maier <e11809618@student.tuwien.ac.at>
- * @date 2019-12-11 
+ * @date 2019-12-22 
  * @brief header file for childIO.h
+ * @details defines functions for childIO.c
  */ 
 #include "forkFFT.h"
 #ifndef childIO_H__

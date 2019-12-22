@@ -1,7 +1,7 @@
 /**
  * @file forkFFT.h
  * @author Jakob G. Maier <e11809618@student.tuwien.ac.at>
- * @date 2019-12-11 
+ * @date 2019-12-22 
  * @brief header file for forkFFT.c 
  * @details defines some important constants for forkFFT.c
  */ 
