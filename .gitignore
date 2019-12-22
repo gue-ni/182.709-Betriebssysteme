@@ -11,6 +11,8 @@
 *.sh
 *.txt
 *.pdf
+*.order
+*.symvers
 
 # Directories
 ex0/
