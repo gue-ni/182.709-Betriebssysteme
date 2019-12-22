@@ -13,10 +13,9 @@
 *.pdf
 
 # Directories
-exercise1-examples/
+ex0/
 exam1/
 testing/
-kernel/
 .vscode/
 bin/
 
