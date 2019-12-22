@@ -15,15 +15,16 @@
 exercise1-examples/
 exam1/
 testing/
+kernel/
 
 # Executables
-forkFFT
-myexpand
-server
-client
-supervisor
-generator
-test
+#forkFFT
+#myexpand
+#server
+#client
+#supervisor
+#generator
+#test
 
 
 
