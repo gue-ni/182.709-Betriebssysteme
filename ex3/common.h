@@ -20,30 +20,28 @@
  * Represents an edge from u->v
  */
 typedef struct edge {
-    uint8_t u;
-    uint8_t v;
+    uint8_t u; /**< Vertex u */
+    uint8_t v; /**< Vertex v */
 } edge_t;
 
 /**
- * rp: read position on circular buffer
- * wp: write position on circular buffer
- * quit: generators exit when set to 1
- * size: size of the solution written to the buffer, not be larger than 8
- * data: array containing the solutions 
+ * 
  */
 typedef struct circ_buf {
-    volatile sig_atomic_t quit;
-    uint8_t rp;
-    uint8_t wp;
-    uint8_t size[MAX_DATA];
-    edge_t data[MAX_DATA][MAX_SOLUTION_SIZE];
+    volatile sig_atomic_t quit; /**<  quit: generators exit when set to 1 */
+    uint8_t rp;                 /**< read position on circular buffer */
+    uint8_t wp;                 /**< write position on circular buffer */
+    uint8_t size[MAX_DATA];     /**< size of the solution written to the buffer, not be larger than 8 */
+    edge_t data[MAX_DATA][MAX_SOLUTION_SIZE]; /**< array containing the solutions */
 } circ_buf_t;
 
 /**
- * @brief
- * @details
- * @param
- * @return
- */
+ * @brief Prints error message and exits with EXIT_FAILURE
+ * @details Does not check anything and simply prints the error message
+ * and exits with EXIT_FAILURE
+ * @param msg Message to print
+ * @param p Program name
+ * @return void
+ **/
 void error_exit(char *p, char *msg);
 #endif /* COMMON_H__ */

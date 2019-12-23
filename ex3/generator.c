@@ -10,19 +10,18 @@
 #include <semaphore.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <limits.h>
-#include <time.h>
 #include <string.h>
+#include <limits.h>
 #include <unistd.h>
 #include "common.h"
 
-static char *prog; /** < */
-static edge_t *edges;/** < */
-static int shmfd = -1;
-static circ_buf_t *buf = MAP_FAILED;
-static sem_t *free_sem = SEM_FAILED;
-static sem_t *used_sem = SEM_FAILED;
-static sem_t *mutex = SEM_FAILED; /** < */
+static char *prog;                      /**<   */
+static edge_t *edges;                   /**<   */
+static int shmfd = -1;                  /**<   */
+static circ_buf_t *buf = MAP_FAILED;    /**<   */
+static sem_t *free_sem = SEM_FAILED;    /**<   */
+static sem_t *used_sem = SEM_FAILED;    /**<   */
+static sem_t *mutex = SEM_FAILED;       /**<   */
 
 /**
  * @brief
@@ -173,20 +172,20 @@ int main(int argc, char *argv[])
     allocate_resources();
     edge_t solution[MAX_SOLUTION_SIZE];
 
-    int nV = 0, nE = argc - 1;
-    edges = malloc(sizeof(edge_t) * nE);
+    int nv = 0, ne = argc - 1;
+    edges = malloc(sizeof(edge_t) * ne);
     if (edges == NULL) error_exit(prog, "malloc failed");
     
     for (int i = 1; i < argc; i++){
-        parse_edge(edges+(i-1), argv[i], &nV);
+        parse_edge(edges+(i-1), argv[i], &nv);
     }
-    nV++;
+    nv++;
 
-    if (nV > 255 || nE > 255) 
+    if (nv > 255 || ne > 255) 
         error_exit(prog, "too many vertices or edges");
 
-    int *lookup = malloc(sizeof(int) * nV);
-    int *permutation   = malloc(sizeof(int) * nV);
+    int *lookup         = malloc(sizeof(int) * nv);
+    int *permutation    = malloc(sizeof(int) * nv);
 
     if (permutation == NULL) 
         error_exit(prog, "malloc failed");
@@ -199,21 +198,20 @@ int main(int argc, char *argv[])
     int size = 0, min_solution = INT_MAX;
     while (!buf->quit){
 
-        fisher_yates(permutation, lookup, nV);
-        size = monte_carlo(solution, lookup, nE); 
+        fisher_yates(permutation, lookup, nv);
+        size = monte_carlo(solution, lookup, ne); 
 
         if (size == -1) 
             continue; // solution is too large anyway
 
-        if (size < min_solution && size <= MAX_SOLUTION_SIZE){ // <= causes lockup
+        if (size < min_solution && size <= MAX_SOLUTION_SIZE){ // <= would cause lockup
             min_solution = size;
             
             sem_wait(mutex);
             sem_wait(free_sem);
 
-            if (size > 0){
+            if (size > 0)
                 memcpy(buf->data[buf->wp], solution, sizeof(edge_t) * size);
-            }
 
             buf->size[buf->wp] = size;
 

@@ -12,7 +12,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include <unistd.h>
 #include <limits.h>
 #include "common.h"
 
@@ -83,12 +82,10 @@ static void allocate_resources(void)
         error_exit(prog, "mmap failed");
 
     free_sem = sem_open(FREE_SEM, O_CREAT | O_EXCL, 0600, MAX_DATA);
-    used_sem = sem_open(USED_SEM, O_CREAT | O_EXCL, 0600, 0);
-    
-    
     if (free_sem == SEM_FAILED) 
         error_exit(prog, "free_sem failed");
-     
+
+    used_sem = sem_open(USED_SEM, O_CREAT | O_EXCL, 0600, 0);
     if (used_sem == SEM_FAILED) 
         error_exit(prog, "used_sem failed");
 }
