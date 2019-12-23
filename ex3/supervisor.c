@@ -17,10 +17,11 @@
 #include "common.h"
 
 static char *prog;
-static struct circ_buf *buf;
+static struct circ_buf *buf = MAP_FAILED;
 static int shmfd = -1;
-static sem_t *free_sem, *used_sem;
-volatile sig_atomic_t quit = 0;
+static sem_t *free_sem = SEM_FAILED;
+static sem_t *used_sem = SEM_FAILED;
+static volatile sig_atomic_t quit = 0;
 
 /**
  * @brief
@@ -106,26 +107,30 @@ static void allocate_resources(void)
 static void free_resources(void)
 {
     if (shmfd != -1){
-        if (munmap(buf, sizeof(*buf)) == -1) 
-            error_exit(prog, "munmap failed");
-
-        if (close(shmfd) == -1) 
-            error_exit(prog, "close failed");
-
+        close(shmfd);
         if (shm_unlink(SHM_NAME) == -1) 
             error_exit(prog, "shm_unlink failed");
+        shmfd = -1;
+    }
 
-        if (sem_close(free_sem) == -1)  
-            error_exit(prog, "sem_close failed");
+    if (buf != MAP_FAILED){
+        if (munmap(buf, sizeof(*buf)) == -1) 
+            error_exit(prog, "munmap failed");
+        buf = MAP_FAILED;
+    }
 
-        if (sem_close(used_sem) == -1)  
-            error_exit(prog, "sem_close failed");
-
+    if (free_sem != SEM_FAILED){
+        sem_close(free_sem);
         if (sem_unlink(FREE_SEM) == -1) 
             error_exit(prog, "sem_unlink failed");
+        free_sem = SEM_FAILED;
+    }
 
+    if (used_sem != SEM_FAILED){
+        sem_close(used_sem);
         if (sem_unlink(USED_SEM) == -1) 
-            error_exit(prog, "sem_uknlink failed");
+            error_exit(prog, "sem_unlink failed");
+        used_sem = SEM_FAILED;
     }
 }
 

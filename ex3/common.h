@@ -19,10 +19,10 @@
 /**
  * Represents an edge from u->v
  */
-struct edge {
+typedef struct edge {
     uint8_t u;
     uint8_t v;
-};
+} edge_t;
 
 /**
  * rp: read position on circular buffer
@@ -31,13 +31,13 @@ struct edge {
  * size: size of the solution written to the buffer, not be larger than 8
  * data: array containing the solutions 
  */
-struct circ_buf {
+typedef struct circ_buf {
     volatile sig_atomic_t quit;
     uint8_t rp;
     uint8_t wp;
     uint8_t size[MAX_DATA];
     struct edge data[MAX_DATA][MAX_SOLUTION_SIZE];
-};
+} circ_buf_t;
 
 
 /**
