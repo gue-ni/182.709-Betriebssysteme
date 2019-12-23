@@ -15,18 +15,17 @@
 #include <limits.h>
 #include "common.h"
 
-static char *prog = "not set!";
+static char *prog = "not set";
 static int shmfd = -1;
 static circ_buf_t *buf = MAP_FAILED;
 static sem_t *free_sem = SEM_FAILED;
 static sem_t *used_sem = SEM_FAILED;
-static volatile sig_atomic_t quit = 0;
 
-/**
- * @brief
+/** Print solution
+ * @brief Print array of solutions
  * @details
- * @param solution
- * @param size
+ * @param s Array of edges
+ * @param size Size of edge_t array
  * @return void
  */
 static void print_solution(edge_t *s, int size)
@@ -38,23 +37,21 @@ static void print_solution(edge_t *s, int size)
     printf("\n");
 }
 
-/**
- * @brief
- * @details
- * @param
- * @return
+/** Signal handler
+ * @brief Exit from loop and quit and tell generators to exit as well
+ * @details Uses the variable quit in the shared memory to 
+ * communicate between supervisor and generators
+ * @param s Signal s
  */
 static void handle_signal(int s)
 {
-    quit = 1;
     buf->quit = 1;
 }
 
-/**
+/** Print usage
  * @brief
  * @details
- * @param
- * @return
+ * @param void
  */
 static void usage(void)
 {
@@ -62,11 +59,10 @@ static void usage(void)
     exit(EXIT_FAILURE);
 }
 
-/**
- * @brief
+/** Allocate resources
+ * @brief Allocate resources for shared memory and semaphores.
  * @details
- * @param
- * @return
+ * @param void
  */
 static void allocate_resources(void)
 {
@@ -90,11 +86,10 @@ static void allocate_resources(void)
         error_exit(prog, "used_sem failed");
 }
 
-/**
+/** Free resources 
  * @brief
  * @details
- * @param
- * @return
+ * @param void 
  */
 static void free_resources(void)
 {
@@ -158,7 +153,8 @@ int main(int argc, char *argv[])
     if (solution == NULL) error_exit(prog, "malloc failed");
 
     int solution_size, min_solution = INT_MAX;
-    while(!quit){
+    
+    while(!buf->quit){
 
         if (sem_wait(used_sem) == -1){
             if (errno == EINTR) 
@@ -183,6 +179,5 @@ int main(int argc, char *argv[])
         sem_post(free_sem);
         buf->rp = (buf->rp + 1) % MAX_DATA;
     }
-
     return EXIT_SUCCESS;
 }

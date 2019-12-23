@@ -18,10 +18,10 @@
 static char *prog;                      /**<   */
 static edge_t *edges;                   /**<   */
 static int shmfd = -1;                  /**<   */
-static circ_buf_t *buf = MAP_FAILED;    /**<   */
-static sem_t *free_sem = SEM_FAILED;    /**<   */
-static sem_t *used_sem = SEM_FAILED;    /**<   */
-static sem_t *mutex = SEM_FAILED;       /**<   */
+static circ_buf_t *buf  = MAP_FAILED;    /**<   */
+static sem_t *free_sem  = SEM_FAILED;    /**<   */
+static sem_t *used_sem  = SEM_FAILED;    /**<   */
+static sem_t *mutex     = SEM_FAILED;       /**<   */
 
 /**
  * @brief
@@ -101,15 +101,16 @@ static int max(int x, int y)
 /**
  * @brief
  * @details
- * @param
- * @return
+ * @param edge Pointer to save the parsed edges
+ * @param buf 
+ * @param m
  */
 static void parse_edge(edge_t *edge, char *buf, int *m)
 {
     char *endptr;
     edge->u = strtol(buf, &endptr, 10);
     edge->v = abs(strtol(endptr, NULL, 10));
-    *m = max(max(edge->u, edge->v), *m); 
+    *m = max( max( edge->u, edge->v ), *m ); 
 }
 
 
@@ -174,7 +175,8 @@ int main(int argc, char *argv[])
 
     int nv = 0, ne = argc - 1;
     edges = malloc(sizeof(edge_t) * ne);
-    if (edges == NULL) error_exit(prog, "malloc failed");
+    if (edges == NULL) 
+        error_exit(prog, "malloc failed");
     
     for (int i = 1; i < argc; i++){
         parse_edge(edges+(i-1), argv[i], &nv);
@@ -196,6 +198,7 @@ int main(int argc, char *argv[])
     srand(getpid()); // seed random number generator
 
     int size = 0, min_solution = INT_MAX;
+
     while (!buf->quit){
 
         fisher_yates(permutation, lookup, nv);
