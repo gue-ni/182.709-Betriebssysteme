@@ -46,5 +46,5 @@ struct circ_buf {
  * @param
  * @return
  */
-void exit_error(char *p, char *msg);
+void error_exit(char *p, char *msg);
 #endif /* common_H__ */

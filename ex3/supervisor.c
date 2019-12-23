@@ -71,27 +71,27 @@ static void usage(void)
 static void allocate_resources(void)
 {
     if ((shmfd = shm_open(SHM_NAME, O_RDWR | O_CREAT, 0600)) == -1)
-        exit_error(prog, "shm_open failed");
+        error_exit(prog, "shm_open failed");
 
     if (ftruncate(shmfd, sizeof(struct circ_buf)) < 0)
-        exit_error(prog, "ftruncate failed");
+        error_exit(prog, "ftruncate failed");
 
     buf = mmap(NULL, sizeof(*buf), PROT_READ | PROT_WRITE, MAP_SHARED, shmfd, 0);
 
     if (buf == MAP_FAILED) 
-        exit_error(prog, "mmap failed");
+        error_exit(prog, "mmap failed");
 
     free_sem = sem_open(FREE_SEM, O_CREAT | O_EXCL, 0600, MAX_DATA);
     used_sem = sem_open(USED_SEM, O_CREAT | O_EXCL, 0600, 0);
     
     
-    free_sem = sem_open(FREE_SEM, 0);
+    //free_sem = sem_open(FREE_SEM, 0);
     if (free_sem == SEM_FAILED) 
-        exit_error(prog, "free_sem failed");
+        error_exit(prog, "free_sem failed");
      
-    used_sem = sem_open(USED_SEM, 0);
+    //used_sem = sem_open(USED_SEM, 0);
     if (used_sem == SEM_FAILED) 
-        exit_error(prog, "used_sem failed");
+        error_exit(prog, "used_sem failed");
 
 
 
@@ -107,25 +107,25 @@ static void free_resources(void)
 {
     if (shmfd != -1){
         if (munmap(buf, sizeof(*buf)) == -1) 
-            exit_error(prog, "munmap failed");
+            error_exit(prog, "munmap failed");
 
         if (close(shmfd) == -1) 
-            exit_error(prog, "close failed");
+            error_exit(prog, "close failed");
 
         if (shm_unlink(SHM_NAME) == -1) 
-            exit_error(prog, "shm_unlink failed");
+            error_exit(prog, "shm_unlink failed");
 
         if (sem_close(free_sem) == -1)  
-            exit_error(prog, "sem_close failed");
+            error_exit(prog, "sem_close failed");
 
         if (sem_close(used_sem) == -1)  
-            exit_error(prog, "sem_close failed");
+            error_exit(prog, "sem_close failed");
 
         if (sem_unlink(FREE_SEM) == -1) 
-            exit_error(prog, "sem_unlink failed");
+            error_exit(prog, "sem_unlink failed");
 
         if (sem_unlink(USED_SEM) == -1) 
-            exit_error(prog, "sem_uknlink failed");
+            error_exit(prog, "sem_uknlink failed");
     }
 }
 
@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
         usage();
 
     if (atexit(free_resources) != 0)
-        exit_error(prog, "resources not freed");
+        error_exit(prog, "resources not freed");
     
     struct sigaction sa;
     memset(&sa, 0, sizeof(sa));
@@ -158,7 +158,7 @@ int main(int argc, char *argv[])
     buf->quit = 0;
 
     struct edge solution[MAX_SOLUTION_SIZE];
-    if (solution == NULL) exit_error(prog, "malloc failed");
+    if (solution == NULL) error_exit(prog, "malloc failed");
 
     int solution_size, min_solution = INT_MAX;
     while(!quit){
@@ -166,7 +166,7 @@ int main(int argc, char *argv[])
         if (sem_wait(used_sem) == -1){
             if (errno == EINTR) 
                 continue;
-            exit_error(prog, "something happended");
+            error_exit(prog, "something happended");
         }
             
         solution_size = buf->size[buf->rp];

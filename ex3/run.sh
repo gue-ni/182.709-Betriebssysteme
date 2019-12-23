@@ -32,6 +32,6 @@ case $1 in
 	;;
 
 	*)
-		echo "none" 
+		echo "Not a valid option" 
 	;;
 esac

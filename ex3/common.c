@@ -8,7 +8,7 @@
 #include <time.h>
 #include "common.h"
 
-void exit_error(char *p, char *msg)
+void error_exit(char *p, char *msg)
 {
     fprintf(stderr, "[%s] %s\n", p, msg);
     exit(EXIT_FAILURE);

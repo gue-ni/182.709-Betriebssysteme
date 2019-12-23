@@ -31,23 +31,23 @@ static sem_t *free_sem, *used_sem, *mutex; /** < */
 static void allocate_resources(void)
 {
     if ((shmfd = shm_open(SHM_NAME, O_RDWR | O_CREAT, 0600)) == -1)
-        exit_error(prog, "shm_open failed");
+        error_exit(prog, "shm_open failed");
 
     buf = mmap(NULL, sizeof(*buf), PROT_READ | PROT_WRITE, MAP_SHARED, shmfd, 0);
 
-    if (buf == MAP_FAILED) exit_error(prog, "mmap failed");
+    if (buf == MAP_FAILED) error_exit(prog, "mmap failed");
 
     free_sem = sem_open(FREE_SEM, 0);
     if (free_sem == SEM_FAILED)
-        exit_error(prog, "sem_open (free_sem) failed");
+        error_exit(prog, "sem_open (free_sem) failed");
   
     used_sem = sem_open(USED_SEM, 0);
     if (used_sem == SEM_FAILED)
-        exit_error(prog, "sem_open (used_sem) failed");
+        error_exit(prog, "sem_open (used_sem) failed");
    
     mutex = sem_open(MUTEX, O_CREAT, 0600, 1);
     if (mutex == SEM_FAILED)
-        exit_error(prog, "sem_open (mutex) failed");
+        error_exit(prog, "sem_open (mutex) failed");
 }
 
 /**
@@ -60,19 +60,19 @@ static void free_resources(void)
 {
     //fprintf(stdout, "[%s] free resources\n", prog);
     if (munmap(buf, sizeof(*buf)) == -1) 
-        exit_error(prog, "munmap failed");
+        error_exit(prog, "munmap failed");
 
     if (close(shmfd) == -1) 
-        exit_error(prog, "close failed");
+        error_exit(prog, "close failed");
 
     if (sem_close(free_sem) == -1) 
-        exit_error(prog, "sem_close failed");
+        error_exit(prog, "sem_close failed");
 
     if (sem_close(mutex) == -1) 
-        exit_error(prog, "sem_close failed");
+        error_exit(prog, "sem_close failed");
 
     if (sem_close(used_sem) == -1) 
-        exit_error(prog, "sem_close failed");
+        error_exit(prog, "sem_close failed");
 
     sem_unlink(MUTEX);
 }
@@ -158,14 +158,14 @@ int main(int argc, char *argv[])
     prog = argv[0];
 
     if (atexit(free_resources) != 0) 
-        exit_error(prog, "resources not freed");
+        error_exit(prog, "resources not freed");
 
     allocate_resources();
     struct edge solution[MAX_SOLUTION_SIZE];
 
     int nV = 0, nE = argc - 1;
     edges = malloc(sizeof(struct edge) * nE);
-    if (edges == NULL) exit_error(prog, "malloc failed");
+    if (edges == NULL) error_exit(prog, "malloc failed");
     
     for (int i = 1; i < argc; i++){
         parse_edge(edges+(i-1), argv[i], &nV);
@@ -173,16 +173,16 @@ int main(int argc, char *argv[])
     nV++;
 
     if (nV > 255 || nE > 255) 
-        exit_error(prog, "too many vertices or edges");
+        error_exit(prog, "too many vertices or edges");
 
     int *lookup = malloc(sizeof(int) * nV);
     int *permutation   = malloc(sizeof(int) * nV);
 
     if (permutation == NULL) 
-        exit_error(prog, "malloc failed");
+        error_exit(prog, "malloc failed");
 
     if (lookup == NULL) 
-        exit_error(prog, "malloc failed");
+        error_exit(prog, "malloc failed");
     
     srand(getpid()); // seed random number generator
 
