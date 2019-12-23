@@ -17,10 +17,12 @@
 #include "common.h"
 
 static char *prog; /** < */
-static struct circ_buf *buf; /** < */
-static int shmfd = -1;/** < */
-static struct edge *edges;/** < */
-static sem_t *free_sem, *used_sem, *mutex; /** < */
+static edge_t *edges;/** < */
+static int shmfd = -1;
+static circ_buf_t *buf = MAP_FAILED;
+static sem_t *free_sem = SEM_FAILED;
+static sem_t *used_sem = SEM_FAILED;
+static sem_t *mutex = SEM_FAILED; /** < */
 
 /**
  * @brief
@@ -58,23 +60,32 @@ static void allocate_resources(void)
  */
 static void free_resources(void)
 {
-    //fprintf(stdout, "[%s] free resources\n", prog);
-    if (munmap(buf, sizeof(*buf)) == -1) 
-        error_exit(prog, "munmap failed");
+    if (shmfd != -1){
+        close(shmfd);
+        shmfd = -1;
+    }
 
-    if (close(shmfd) == -1) 
-        error_exit(prog, "close failed");
+    if (buf != MAP_FAILED){
+        if (munmap(buf, sizeof(*buf)) == -1) 
+            error_exit(prog, "munmap failed");
+        buf = MAP_FAILED;
+    }
 
-    if (sem_close(free_sem) == -1) 
-        error_exit(prog, "sem_close failed");
+    if (free_sem != SEM_FAILED){
+        sem_close(free_sem);
+        free_sem = SEM_FAILED;
+    }
 
-    if (sem_close(mutex) == -1) 
-        error_exit(prog, "sem_close failed");
+    if (used_sem != SEM_FAILED){
+        sem_close(used_sem);
+        used_sem = SEM_FAILED;
+    }
 
-    if (sem_close(used_sem) == -1) 
-        error_exit(prog, "sem_close failed");
-
-    sem_unlink(MUTEX);
+    if (mutex != SEM_FAILED){
+        sem_close(mutex);
+        sem_unlink(MUTEX);
+        mutex = SEM_FAILED;
+    }
 }
 
 /**
@@ -85,7 +96,6 @@ static void free_resources(void)
  */
 static int max(int x, int y)
 { 
-
     return x > y ? x : y; 
 }
 
@@ -95,7 +105,7 @@ static int max(int x, int y)
  * @param
  * @return
  */
-static void parse_edge(struct edge *edge, char *buf, int *m)
+static void parse_edge(edge_t *edge, char *buf, int *m)
 {
     char *endptr;
     edge->u = strtol(buf, &endptr, 10);
@@ -130,9 +140,9 @@ static void fisher_yates(int *a, int *l, int n)
  * @param
  * @return size of solution, -1 if solution is larger than MAX_SOLUTION_SIZE
  */
-static int monte_carlo(struct edge *solution, int *perm, int n)
+static int monte_carlo(edge_t *solution, int *perm, int n)
 {
-    memset(solution, 0, sizeof(struct edge) * MAX_SOLUTION_SIZE);
+    memset(solution, 0, sizeof(edge_t) * MAX_SOLUTION_SIZE);
     int size = 0;
     for (int i = 0; i < n; i++){
 
@@ -161,10 +171,10 @@ int main(int argc, char *argv[])
         error_exit(prog, "resources not freed");
 
     allocate_resources();
-    struct edge solution[MAX_SOLUTION_SIZE];
+    edge_t solution[MAX_SOLUTION_SIZE];
 
     int nV = 0, nE = argc - 1;
-    edges = malloc(sizeof(struct edge) * nE);
+    edges = malloc(sizeof(edge_t) * nE);
     if (edges == NULL) error_exit(prog, "malloc failed");
     
     for (int i = 1; i < argc; i++){
@@ -202,7 +212,7 @@ int main(int argc, char *argv[])
             sem_wait(free_sem);
 
             if (size > 0){
-                memcpy(buf->data[buf->wp], solution, sizeof(struct edge) * size);
+                memcpy(buf->data[buf->wp], solution, sizeof(edge_t) * size);
             }
 
             buf->size[buf->wp] = size;

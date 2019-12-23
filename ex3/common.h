@@ -4,8 +4,8 @@
  * @date 2019-12-16
  * @brief
  */
-#ifndef common_H__
-#define common_H__
+#ifndef COMMON_H__
+#define COMMON_H__
 
 #include <signal.h>
 #include <stdint.h>
@@ -36,9 +36,8 @@ typedef struct circ_buf {
     uint8_t rp;
     uint8_t wp;
     uint8_t size[MAX_DATA];
-    struct edge data[MAX_DATA][MAX_SOLUTION_SIZE];
+    edge_t data[MAX_DATA][MAX_SOLUTION_SIZE];
 } circ_buf_t;
-
 
 /**
  * @brief
@@ -47,4 +46,4 @@ typedef struct circ_buf {
  * @return
  */
 void error_exit(char *p, char *msg);
-#endif /* common_H__ */
+#endif /* COMMON_H__ */
