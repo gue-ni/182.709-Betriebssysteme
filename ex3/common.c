@@ -10,6 +10,6 @@
 
 void exit_error(char *p, char *msg)
 {
-    fprintf(stderr, "%s %s\n", p, msg);
+    fprintf(stderr, "[%s] %s\n", p, msg);
     exit(EXIT_FAILURE);
 }
