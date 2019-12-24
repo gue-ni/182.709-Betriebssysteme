@@ -11,6 +11,8 @@ DEPS   = common
 .PHONY: all clean 
 
 all: $(PROGS)
+	rm -f exercise_3.tgz
+	tar -cvzf exercise_3.tgz supervisor.c generator.c common.c common.h Makefile
 
 $(PROGS): %: %.o $(DEPS:=.o)
 	$(CC) -o $@ $^ $(LFLAGS)
@@ -19,4 +21,4 @@ $(PROGS): %: %.o $(DEPS:=.o)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
-	rm -rf *.o $(PROGS)
+	rm -rf *.o *.tgz $(PROGS)

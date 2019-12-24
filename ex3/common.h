@@ -41,7 +41,6 @@ typedef struct circ_buf {
  * and exits with EXIT_FAILURE
  * @param msg Message to print
  * @param p Program name
- * @return void
  **/
 void error_exit(char *p, char *msg);
 #endif /* COMMON_H__ */

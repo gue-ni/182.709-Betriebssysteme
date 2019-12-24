@@ -1,5 +1,4 @@
 #!/bin/bash
-
 case $1 in
 	0)
 		kill -2 $(pidof supervisor)
