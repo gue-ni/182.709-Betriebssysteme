@@ -1,7 +1,17 @@
 # Files
-!*.h
-!*.c
-*.*
+*.txt
+*.pdf
+*.html
+*.sh
+*.pdf
+*.o
+*.tgz
+*.js
+*.css
+*.gif
+*.png
+*.jpeg
+*.ppm
 .cache.mk
 
 # Directories
