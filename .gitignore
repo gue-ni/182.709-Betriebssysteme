@@ -2,6 +2,7 @@
 !*.h
 !*.c
 *.*
+.cache.mk
 
 # Directories
 ex0/
