@@ -8,9 +8,11 @@ LFLAGS = -lrt -pthread
 PROGS  = supervisor generator 
 DEPS   = common
 
-.PHONY: all clean 
+.PHONY: all clean compress
 
 all: $(PROGS)
+
+compress: 
 	rm -f exercise_3.tgz
 	tar -cvzf exercise_3.tgz supervisor.c generator.c common.c common.h Makefile
 
@@ -21,4 +23,4 @@ $(PROGS): %: %.o $(DEPS:=.o)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
-	rm -rf *.o *.tgz $(PROGS)
+	rm -rf *.o $(PROGS)
