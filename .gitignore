@@ -21,7 +21,12 @@ exam2/
 testing/
 .vscode/
 graphics/
+#rpi-os/
 
 # Executables
+ex1a/myexpand
+ex1b/server
+ex1b/client
+ex2/forkFFT
 ex3/generator
 ex3/supervisor
