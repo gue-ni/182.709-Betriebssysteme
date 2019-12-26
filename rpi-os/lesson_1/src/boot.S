@@ -4,10 +4,10 @@
 
 .globl _start
 _start:
-	mrs	x0, mpidr_el1		
-	and	x0, x0,#0xFF	// Check processor id
-	cbz	x0, master		// Hang for all non-primary CPU
-	b	proc_hang
+	mrs	x0, mpidr_el1	// load processor id to register x0	
+	and	x0, x0,#0xFF	// check processor id
+	cbz	x0, master		// branch to master is 0x is 0
+	b	proc_hang		// branch to label proc_hand
 
 proc_hang: 
 	b 	proc_hang

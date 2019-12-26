@@ -7,5 +7,6 @@ void kernel_main(void)
 
 	while (1) {
 		uart_send(uart_recv());
+		uart_send('\n');
 	}
 }
