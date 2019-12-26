@@ -21,7 +21,7 @@ exam2/
 testing/
 .vscode/
 graphics/
-#rpi-os/
+rpi-os/
 
 # Executables
 ex1a/myexpand
