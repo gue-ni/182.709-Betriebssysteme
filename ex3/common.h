@@ -2,6 +2,7 @@
  * @file common.h
  * @author Jakob G. Maier <e11809618@student.tuwien.ac.at>
  * @date 2019-12-16
+ * 
  * @brief
  */
 #ifndef COMMON_H__
@@ -25,14 +26,16 @@ typedef struct edge {
 } edge_t;
 
 /**
- * 
+ * Circular buffer where generators report their solutions to 
+ * the supervisor. Writing and reading positions are stored in 
+ * the rp and wp variables. 
  */
 typedef struct circ_buf {
-    volatile sig_atomic_t quit; /**<  quit: generators exit when set to 1 */
+    volatile sig_atomic_t quit; /**<  quit: generators and supervisor exit when set to 1 */
     uint8_t rp;                 /**< read position on circular buffer */
     uint8_t wp;                 /**< write position on circular buffer */
     uint8_t size[MAX_DATA];     /**< size of the solution written to the buffer, not be larger than 8 */
-    edge_t data[MAX_DATA][MAX_SOLUTION_SIZE]; /**< array containing the solutions */
+    edge_t data[MAX_DATA][MAX_SOLUTION_SIZE]; /**< array containing the solution arrays */
 } circ_buf_t;
 
 /**

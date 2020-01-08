@@ -1,7 +1,9 @@
 /**
  * @file supervisor.c
  * @author Jakob G. Maier <e11809618@student.tuwien.ac.at>
- * @date
+ * @date 
+ * 
+ * @brief Supervisor Program
  */ 
 #include <stdio.h>
 #include <sys/mman.h>
@@ -15,18 +17,17 @@
 #include <limits.h>
 #include "common.h"
 
-static char *prog = "not set";
-static int shmfd = -1;
-static circ_buf_t *buf = MAP_FAILED;
-static sem_t *free_sem = SEM_FAILED;
-static sem_t *used_sem = SEM_FAILED;
+static char *prog = "not set";  /**< Program name */
+static int shmfd = -1; /**< File descriptor of the shared memory */
+static circ_buf_t *buf  = MAP_FAILED;    /**< The Circular Buffer that holds the solutions */
+static sem_t *free_sem  = SEM_FAILED;    /**< Semaphore to coordinate write access for generator */
+static sem_t *used_sem  = SEM_FAILED;    /**< Semaphore to coordinate read access for supervisor */
 
-/** Print solution
+/** 
  * @brief Print array of solutions
- * @details
+ * @details Print the edges of the solutions held in the array s
  * @param s Array of edges
  * @param size Size of edge_t array
- * @return void
  */
 static void print_solution(edge_t *s, int size)
 {
@@ -37,7 +38,7 @@ static void print_solution(edge_t *s, int size)
     printf("\n");
 }
 
-/** Signal handler
+/** 
  * @brief Exit from loop and quit and tell generators to exit as well
  * @details Uses the variable quit in the shared memory to 
  * communicate between supervisor and generators
@@ -48,9 +49,9 @@ static void handle_signal(int s)
     buf->quit = 1;
 }
 
-/** Print usage
- * @brief
- * @details
+/** 
+ * @brief Print usage of ./supervisor
+ * @details Prints the usage and exits with EXIT_FAILURE
  * @param void
  */
 static void usage(void)
@@ -59,7 +60,7 @@ static void usage(void)
     exit(EXIT_FAILURE);
 }
 
-/** Allocate resources
+/**  
  * @brief Allocate resources for shared memory and semaphores.
  * @details
  * @param void
@@ -86,8 +87,8 @@ static void allocate_resources(void)
         error_exit(prog, "used_sem failed");
 }
 
-/** Free resources 
- * @brief
+/**  
+ * @brief Free resources
  * @details
  * @param void 
  */
@@ -122,9 +123,16 @@ static void free_resources(void)
 }
 
 /**
- * @brief
- * @details
- * @param
+ * @brief The supervisor remembers the best solutions provided by the 
+ * generators so far.
+ * @details Sets up shared memory, semaphores and the circular_buffer. 
+ * Whenever a better solution than the previous solution is found it is
+ * written to standard output. If a generatorwrites a solution with 0 
+ * edges to the circular buffer, then the graph is acyclic and the 
+ * supervisor termi-nates. Otherwise the supervisor keeps reading results 
+ * from the circular buffer until it receives a SIGINT or a SIGTERM signal.
+ * @param argc Argument count
+ * @param argv Argument vector
  * @return EXIT_SUCCESS
  */
 int main(int argc, char *argv[])

@@ -2,6 +2,8 @@
  * @file generator.c
  * @author Jakob G. Maier <e11809618@student.tuwien.ac.at>
  * @date
+ * 
+ * @brief Generator Program
  */ 
 #include <stdio.h>
 #include <sys/mman.h>
@@ -19,9 +21,9 @@ static char *prog;                       /**< Name of program  */
 static edge_t *edges;                    /**< Holds the input edges */
 static int shmfd = -1;                   /**< File descriptor of the shared memory */
 static circ_buf_t *buf  = MAP_FAILED;    /**< The Circular Buffer */
-static sem_t *free_sem  = SEM_FAILED;    /**<   */
-static sem_t *used_sem  = SEM_FAILED;    /**<   */
-static sem_t *mutex     = SEM_FAILED;    /**<   */
+static sem_t *free_sem  = SEM_FAILED;    /**< Semaphore to coordinate write access for generator */
+static sem_t *used_sem  = SEM_FAILED;    /**< Semaphore to coordinate read access for supervisor */
+static sem_t *mutex     = SEM_FAILED;    /**< Mutex seamaphore to control access to the circular buffer */
 
 /**
  * @brief Allocate and open shared memory and semaphores

@@ -2,6 +2,8 @@
  * @file common.c
  * @author Jakob G. Maier <e11809618@student.tuwien.ac.at>
  * @date
+ * 
+ * @brief 
  */
 #include <stdio.h>
 #include <stdlib.h>
