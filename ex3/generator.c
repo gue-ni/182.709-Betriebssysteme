@@ -15,19 +15,18 @@
 #include <unistd.h>
 #include "common.h"
 
-static char *prog;                      /**<   */
-static edge_t *edges;                   /**<   */
-static int shmfd = -1;                  /**<   */
-static circ_buf_t *buf  = MAP_FAILED;    /**<   */
+static char *prog;                       /**< Name of program  */
+static edge_t *edges;                    /**< Holds the input edges */
+static int shmfd = -1;                   /**< File descriptor of the shared memory */
+static circ_buf_t *buf  = MAP_FAILED;    /**< The Circular Buffer */
 static sem_t *free_sem  = SEM_FAILED;    /**<   */
 static sem_t *used_sem  = SEM_FAILED;    /**<   */
-static sem_t *mutex     = SEM_FAILED;       /**<   */
+static sem_t *mutex     = SEM_FAILED;    /**<   */
 
 /**
- * @brief
+ * @brief Allocate and open shared memory and semaphores
  * @details
- * @param
- * @return
+ * @param void
  */
 static void allocate_resources(void)
 {
@@ -52,10 +51,9 @@ static void allocate_resources(void)
 }
 
 /**
- * @brief
+ * @brief Free and close shared memory and semaphores
  * @details
- * @param
- * @return
+ * @param void
  */
 static void free_resources(void)
 {
@@ -88,10 +86,11 @@ static void free_resources(void)
 }
 
 /**
- * @brief
- * @details
- * @param
- * @return
+ * @brief Calculate max value
+ * @details Calculates and returns the maximum of two values
+ * @param x Value
+ * @param y Value
+ * @return Max value of x and y
  */
 static int max(int x, int y)
 { 
@@ -99,11 +98,12 @@ static int max(int x, int y)
 }
 
 /**
- * @brief
- * @details
+ * @brief Parse an edge from a string
+ * @details Parses an edge from a string and safes the max value of 
+ * the vertice to m to calculate to number of vertices
  * @param edge Pointer to save the parsed edges
- * @param buf 
- * @param m
+ * @param buf String that contains the edge 
+ * @param m 
  */
 static void parse_edge(edge_t *edge, char *buf, int *m)
 {
@@ -115,11 +115,10 @@ static void parse_edge(edge_t *edge, char *buf, int *m)
 
 
 /** Shuffle vertices with Fisher-Yates algorithm
- * @brief shuffle vertices
- * @details implements the Fisher-Yates shuffle algorithm
- * @param a array to store shuffled data
- * @param n size of array
- * @return void
+ * @brief Shuffle vertices
+ * @details Implements the Fisher-Yates shuffle algorithm
+ * @param a Array to store shuffled data
+ * @param n Size of array
  */
 static void fisher_yates(int *a, int *l, int n)
 {
@@ -134,11 +133,13 @@ static void fisher_yates(int *a, int *l, int n)
     }
 }
 
-/**
- * @brief
- * @details
- * @param
- * @return size of solution, -1 if solution is larger than MAX_SOLUTION_SIZE
+/** 
+ * @brief Simple randomized algorithm for generating a feedback arc set
+ * @details 
+ * @param solution Array of edges that make up the possible solution
+ * @param perm Permution of the vertices
+ * @param n 
+ * @return Size of solution, -1 if solution is larger than MAX_SOLUTION_SIZE
  */
 static int monte_carlo(edge_t *solution, int *perm, int n)
 {
@@ -158,10 +159,13 @@ static int monte_carlo(edge_t *solution, int *perm, int n)
 }
 
 /**
- * @brief
- * @details
- * @param
- * @return
+ * @brief Calculates Feeddback Arc Set
+ * @details Implement an algorithm which removes cycles in a directed graph by removing 
+ * the least edges possible. Whenever a smaller solution is found it is written to 
+ * the shared memory
+ * @param argc Argument count
+ * @param argv  Argument vektor
+ * @return EXIT_SUCCESS
  */
 int main(int argc, char *argv[])
 {
