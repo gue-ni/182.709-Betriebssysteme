@@ -22,6 +22,7 @@ static int shmfd = -1; /**< File descriptor of the shared memory */
 static circ_buf_t *buf  = MAP_FAILED;    /**< The Circular Buffer that holds the solutions */
 static sem_t *free_sem  = SEM_FAILED;    /**< Semaphore to coordinate write access for generator */
 static sem_t *used_sem  = SEM_FAILED;    /**< Semaphore to coordinate read access for supervisor */
+static sem_t *mutex     = SEM_FAILED;    /**< Mutex seamaphore to control access to the circular buffer */
 
 /** 
  * @brief Print array of solutions
@@ -85,6 +86,11 @@ static void allocate_resources(void)
     used_sem = sem_open(USED_SEM, O_CREAT | O_EXCL, 0600, 0);
     if (used_sem == SEM_FAILED) 
         error_exit(prog, "used_sem failed");
+
+    mutex = sem_open(MUTEX, O_CREAT | O_EXCL, 0600, 1);
+    if (mutex == SEM_FAILED)
+        error_exit(prog, "mutex failed");
+
 }
 
 /**  
@@ -110,14 +116,21 @@ static void free_resources(void)
     if (free_sem != SEM_FAILED){
         sem_close(free_sem);
         if (sem_unlink(FREE_SEM) == -1) 
-            error_exit(prog, "sem_unlink failed");
+            error_exit(prog, "sem_unlink (free_sem) failed");
         free_sem = SEM_FAILED;
     }
 
     if (used_sem != SEM_FAILED){
         sem_close(used_sem);
         if (sem_unlink(USED_SEM) == -1) 
-            error_exit(prog, "sem_unlink failed");
+            error_exit(prog, "sem_unlink (used_sem) failed");
+        used_sem = SEM_FAILED;
+    }
+
+    if (mutex != SEM_FAILED){
+        sem_close(mutex);
+        if (sem_unlink(MUTEX) == -1) 
+            error_exit(prog, "sem_unlink (mutex) failed");
         used_sem = SEM_FAILED;
     }
 }

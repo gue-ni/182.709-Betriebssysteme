@@ -10,10 +10,10 @@
 
 #include <signal.h>
 #include <stdint.h>
-#define SHM_NAME            "/shared_mem"
-#define FREE_SEM            "/fb_free"
-#define USED_SEM            "/fb_used"
-#define MUTEX               "/fb_mutex"
+#define SHM_NAME            "/11809618_shared_mem"
+#define FREE_SEM            "/11809618_fb_free"
+#define USED_SEM            "/11809618_fb_used"
+#define MUTEX               "/11809618_fb_mutex"
 #define MAX_DATA            (128)
 #define MAX_SOLUTION_SIZE   (8)
 
@@ -28,7 +28,9 @@ typedef struct edge {
 /**
  * Circular buffer where generators report their solutions to 
  * the supervisor. Writing and reading positions are stored in 
- * the rp and wp variables. 
+ * the rp and wp variables. The quit variable is set to 1 when the 
+ * supervisor  receives SIGINT or SIGTERM and signals to the 
+ * generators when to quit and free all resources. 
  */
 typedef struct circ_buf {
     volatile sig_atomic_t quit; /**<  quit: generators and supervisor exit when set to 1 */

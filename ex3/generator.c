@@ -17,13 +17,24 @@
 #include <unistd.h>
 #include "common.h"
 
-static char *prog;                       /**< Name of program  */
+static char *prog = "not set";           /**< Name of program  */
 static edge_t *edges;                    /**< Holds the input edges */
 static int shmfd = -1;                   /**< File descriptor of the shared memory */
 static circ_buf_t *buf  = MAP_FAILED;    /**< The Circular Buffer */
 static sem_t *free_sem  = SEM_FAILED;    /**< Semaphore to coordinate write access for generator */
 static sem_t *used_sem  = SEM_FAILED;    /**< Semaphore to coordinate read access for supervisor */
 static sem_t *mutex     = SEM_FAILED;    /**< Mutex seamaphore to control access to the circular buffer */
+
+/** 
+ * @brief Print usage of ./generator
+ * @details Prints the usage and exits with EXIT_FAILURE
+ * @param void
+ */
+static void usage(void)
+{
+    fprintf(stderr, "USAGE: %s 0-1 1-2 2-0\n", prog);
+    exit(EXIT_FAILURE);
+}
 
 /**
  * @brief Allocate and open shared memory and semaphores
@@ -47,7 +58,7 @@ static void allocate_resources(void)
     if (used_sem == SEM_FAILED)
         error_exit(prog, "sem_open (used_sem) failed");
    
-    mutex = sem_open(MUTEX, O_CREAT, 0600, 1);
+    mutex = sem_open(MUTEX, 0);
     if (mutex == SEM_FAILED)
         error_exit(prog, "sem_open (mutex) failed");
 }
@@ -82,7 +93,7 @@ static void free_resources(void)
 
     if (mutex != SEM_FAILED){
         sem_close(mutex);
-        sem_unlink(MUTEX);
+//        sem_unlink(MUTEX);
         mutex = SEM_FAILED;
     }
 }
@@ -172,6 +183,9 @@ static int monte_carlo(edge_t *solution, int *perm, int n)
 int main(int argc, char *argv[])
 {
     prog = argv[0];
+    if (argc == 1){
+        usage();
+    }
 
     if (atexit(free_resources) != 0) 
         error_exit(prog, "resources not freed");
