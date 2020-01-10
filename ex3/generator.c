@@ -1,9 +1,10 @@
 /**
  * @file generator.c
  * @author Jakob G. Maier <e11809618@student.tuwien.ac.at>
- * @date
+ * @date 10.01.2020
  * 
- * @brief Generator Program
+ * @brief Generator Program, generates possible solutions and writes them 
+ * to the shared circular buffer
  */ 
 #include <stdio.h>
 #include <sys/mman.h>
@@ -37,8 +38,10 @@ static void usage(void)
 }
 
 /**
- * @brief Allocate and open shared memory and semaphores
- * @details
+ * @brief Open shared memory and semaphores
+ * @details Open shared memory and map circular buffer into memory.
+ * Semaphores are opened after they have been allocated in the
+ * supervisor program.
  * @param void
  */
 static void allocate_resources(void)
@@ -65,7 +68,9 @@ static void allocate_resources(void)
 
 /**
  * @brief Free and close shared memory and semaphores
- * @details
+ * @details Close shared memory and unmap circular buffer.
+ * Semaphores are closed but not unlinked, this is done in
+ * the supervisor program.
  * @param void
  */
 static void free_resources(void)
@@ -93,7 +98,6 @@ static void free_resources(void)
 
     if (mutex != SEM_FAILED){
         sem_close(mutex);
-//        sem_unlink(MUTEX);
         mutex = SEM_FAILED;
     }
 }
@@ -116,7 +120,7 @@ static int max(int x, int y)
  * the vertice to m to calculate to number of vertices
  * @param edge Pointer to save the parsed edges
  * @param buf String that contains the edge 
- * @param m 
+ * @param m Variable that holds the max value
  */
 static void parse_edge(edge_t *edge, char *buf, int *m)
 {
@@ -130,7 +134,9 @@ static void parse_edge(edge_t *edge, char *buf, int *m)
 /** Shuffle vertices with Fisher-Yates algorithm
  * @brief Shuffle vertices
  * @details Implements the Fisher-Yates shuffle algorithm
- * @param a Array to store shuffled data
+ * and generates a lookup table
+ * @param a The vertices to be shuffled
+ * @param l Array to store the lookup table
  * @param n Size of array
  */
 static void fisher_yates(int *a, int *l, int n)
@@ -148,10 +154,10 @@ static void fisher_yates(int *a, int *l, int n)
 
 /** 
  * @brief Simple randomized algorithm for generating a feedback arc set
- * @details 
+ * @details  
  * @param solution Array of edges that make up the possible solution
  * @param perm Permution of the vertices
- * @param n 
+ * @param n Number of edges 
  * @return Size of solution, -1 if solution is larger than MAX_SOLUTION_SIZE
  */
 static int monte_carlo(edge_t *solution, int *perm, int n)

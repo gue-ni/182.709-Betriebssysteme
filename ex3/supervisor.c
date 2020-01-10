@@ -1,9 +1,10 @@
 /**
  * @file supervisor.c
  * @author Jakob G. Maier <e11809618@student.tuwien.ac.at>
- * @date 
+ * @date 10.01.2020
  * 
- * @brief Supervisor Program
+ * @brief Supervisor Program, supervises the circular buffer and writes the
+ * best solution to stdout
  */ 
 #include <stdio.h>
 #include <sys/mman.h>
@@ -18,16 +19,16 @@
 #include "common.h"
 
 static char *prog = "not set";  /**< Program name */
-static int shmfd = -1; /**< File descriptor of the shared memory */
-static circ_buf_t *buf  = MAP_FAILED;    /**< The Circular Buffer that holds the solutions */
-static sem_t *free_sem  = SEM_FAILED;    /**< Semaphore to coordinate write access for generator */
-static sem_t *used_sem  = SEM_FAILED;    /**< Semaphore to coordinate read access for supervisor */
-static sem_t *mutex     = SEM_FAILED;    /**< Mutex seamaphore to control access to the circular buffer */
+static int shmfd = -1;                   /**< File descriptor of the shared memory */
+static circ_buf_t *buf  = MAP_FAILED;    /**< The circular buffer that holds the solutions */
+static sem_t *free_sem  = SEM_FAILED;    /**< Coordinate write access for generator */
+static sem_t *used_sem  = SEM_FAILED;    /**< Coordinate read access for supervisor */
+static sem_t *mutex     = SEM_FAILED;    /**< Control access to the circular buffer */
 
 /** 
  * @brief Print array of solutions
  * @details Print the edges of the solutions held in the array s
- * @param s Array of edges
+ * @param s Array of edges that hold the solution
  * @param size Size of edge_t array
  */
 static void print_solution(edge_t *s, int size)
@@ -63,7 +64,13 @@ static void usage(void)
 
 /**  
  * @brief Allocate resources for shared memory and semaphores.
- * @details
+ * @details Opens shared memory and maps circular buffer into memory.
+ * Semaphores are opened and initalized to their correct value. 
+ * "mutex" is used for controlling access of the generators to 
+ * the circular buffer, free_sem and used_sem control the order of access
+ * for supervisor and generator.
+ * Works in client server modell, resources are 
+ * allocated and cleaned up by supervisor (server) program
  * @param void
  */
 static void allocate_resources(void)
@@ -90,12 +97,12 @@ static void allocate_resources(void)
     mutex = sem_open(MUTEX, O_CREAT | O_EXCL, 0600, 1);
     if (mutex == SEM_FAILED)
         error_exit(prog, "mutex failed");
-
 }
 
 /**  
- * @brief Free resources
- * @details
+ * @brief Free resources (shared memory and semaphores)
+ * @details Frees shared memory and unmaps circular buffer
+ * from memory. Closes and unlinks all 3 semaphores
  * @param void 
  */
 static void free_resources(void)

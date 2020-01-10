@@ -1,9 +1,9 @@
 /**
  * @file common.c
  * @author Jakob G. Maier <e11809618@student.tuwien.ac.at>
- * @date
+ * @date 10.01.2020
  * 
- * @brief 
+ * @brief Implements error handling function
  */
 #include <stdio.h>
 #include <stdlib.h>

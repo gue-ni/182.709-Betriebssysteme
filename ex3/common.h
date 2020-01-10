@@ -1,15 +1,17 @@
 /**
  * @file common.h
  * @author Jakob G. Maier <e11809618@student.tuwien.ac.at>
- * @date 2019-12-16
+ * @date 10.01.2020 
  * 
- * @brief
+ * @brief Defines various structs and constants for use in generator
+ * and supervisor
  */
 #ifndef COMMON_H__
 #define COMMON_H__
 
 #include <signal.h>
 #include <stdint.h>
+
 #define SHM_NAME            "/11809618_shared_mem"
 #define FREE_SEM            "/11809618_fb_free"
 #define USED_SEM            "/11809618_fb_used"
