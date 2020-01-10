@@ -199,7 +199,6 @@ int main(int argc, char *argv[])
             } else {
                 memcpy(solution, buf->data[buf->rp], solution_size * sizeof(edge_t));
                 print_solution(solution, solution_size);
-
             }
             min_solution = solution_size;
         } 

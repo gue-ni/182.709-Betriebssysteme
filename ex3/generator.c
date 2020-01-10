@@ -154,7 +154,9 @@ static void fisher_yates(int *a, int *l, int n)
 
 /** 
  * @brief Simple randomized algorithm for generating a feedback arc set
- * @details  
+ * @details This algorithm has an expected runtime which is polynomial 
+ * in the size of the graph and thus is on average much faster than an 
+ * algorithm which tries to find an exact solution 
  * @param solution Array of edges that make up the possible solution
  * @param perm Permution of the vertices
  * @param n Number of edges 
@@ -170,7 +172,7 @@ static int monte_carlo(edge_t *solution, int *perm, int n)
             return -1;
         }
 
-        if (perm[ edges[i].u ] > perm[ edges[i].v ]){ // invalid write here
+        if (perm[ edges[i].u ] > perm[ edges[i].v ]){
             solution[size++] = edges[i];
         }
     }
@@ -178,10 +180,11 @@ static int monte_carlo(edge_t *solution, int *perm, int n)
 }
 
 /**
- * @brief Calculates Feeddback Arc Set
- * @details Implement an algorithm which removes cycles in a directed graph by removing 
- * the least edges possible. Whenever a smaller solution is found it is written to 
- * the shared memory
+ * @brief Calculates Feedback Arc Set
+ * @details Implement an algorithm which removes cycles in a directed 
+ * graph by removing the least edges possible. The set of these edges 
+ * is called a feedback arc set. Whenever a smaller solution is found 
+ * it is written to the shared memory.
  * @param argc Argument count
  * @param argv  Argument vektor
  * @return EXIT_SUCCESS
@@ -199,7 +202,9 @@ int main(int argc, char *argv[])
     allocate_resources();
     edge_t solution[MAX_SOLUTION_SIZE];
 
-    int nv = 0, ne = argc - 1;
+    int nv = 0; // number of vertices
+    int ne = argc - 1; // number of edges
+
     edges = malloc(sizeof(edge_t) * ne);
     if (edges == NULL) 
         error_exit(prog, "malloc failed");
@@ -223,7 +228,7 @@ int main(int argc, char *argv[])
     
     srand(getpid()); // seed random number generator
 
-    int size = 0, min_solution = INT_MAX;
+    int size, min_solution = INT_MAX; // size of solution, size of smallest solution so far
 
     while (!buf->quit){
 

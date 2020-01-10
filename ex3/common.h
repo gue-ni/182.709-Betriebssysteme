@@ -13,9 +13,9 @@
 #include <stdint.h>
 
 #define SHM_NAME            "/11809618_shared_mem"
-#define FREE_SEM            "/11809618_fb_free"
-#define USED_SEM            "/11809618_fb_used"
-#define MUTEX               "/11809618_fb_mutex"
+#define FREE_SEM            "/11809618_free"
+#define USED_SEM            "/11809618_used"
+#define MUTEX               "/11809618_mutex"
 #define MAX_DATA            (128)
 #define MAX_SOLUTION_SIZE   (8)
 

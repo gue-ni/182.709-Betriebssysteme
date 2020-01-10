@@ -13,6 +13,7 @@
 *.jpeg
 *.ppm
 .cache.mk
+test.c
 
 # Directories
 ex0/
