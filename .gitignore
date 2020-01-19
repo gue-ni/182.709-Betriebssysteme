@@ -13,14 +13,12 @@
 *.jpeg
 *.ppm
 .cache.mk
-test.c
 
 # Directories
 ex0/
 exam1/
 exam2/
 .vscode/
-angaben/
 
 # Executables
 ex1a/myexpand
